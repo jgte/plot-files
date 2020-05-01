@@ -7,12 +7,9 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
-  bibi)
-    echo bibi
   test) #test plot-files.sh
-    exec ./test/test-plot-files.sh && echo true || echo false
-    exec mv -v ./test/test.png /iodir/
-    ls -la /iodir/
+    ./test/test-plot-files.sh \
+      && mv -v ./test/test.png /iodir/
   ;;
   cat-test|example) #shows the test script
     exec cat ./test/test-plot-files.sh 
@@ -22,7 +19,7 @@ case "$1" in
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
-    exec ./plot-files.sh "$@"
-    exec mv -v $(ls -t | head -n1) /iodir/
+    ./plot-files.sh "$@" \
+      && mv -v $(ls -t | head -n1) /iodir/
   ;;
 esac
