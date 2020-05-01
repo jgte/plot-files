@@ -9,13 +9,13 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
-  dockerhub-user) #shows all available modes
+  dockerhub-user) #shows dockerhub usename
     echo spacegravimetry
   ;;
-  github-repo) #shows all available modes
+  github-repo) #shows github repo URL
     echo https://github.com/jgte/plot-files.git
   ;;
-  app-name) #shows all available modes
+  app-name) #shows current app's name
     echo plot-files
   ;;
   version) #shows the latest version of the image
@@ -45,9 +45,16 @@ CMD [\"help\"]
   ps-exited) #shows all containers IDs for the latest version of the image that have exited
     docker ps -a | grep $($BASH_SOURCE image) | awk '/Exited \(/ {print $1}'
   ;;
-  clean-exited) #removes all exited containers for the latest version of the image
+  clean-exited|clear-exited) #removes all exited containers for the latest version of the image
     IDs=$($BASH_SOURCE ps-exited)
     [ -z "$IDs" ] && echo "No exited containers found" || docker rm $IDs
+  ;;
+  clean-none|clear-none) #removes all images with tag '<none>' as well as the corresponding containers
+    for i in $(docker images | awk '/<none>/ {print $3}')
+    do
+      docker rm $(docker ps -a |awk '/'$i'/ {print $1}')
+      docker rmi $i
+    done
   ;;
   images) #shows all images relevant to this app
     docker images | grep $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name)
@@ -55,6 +62,12 @@ CMD [\"help\"]
   clean-images) #removes all images relevant to this app
     IDs=$($BASH_SOURCE images | awk '{print $3}')
     [ -z "$IDs" ] && echo "No relevant images found" || docker rmi $IDs
+  ;;
+  clean-all|clear-all) #removes all relevant images and containers
+    for i in clean-exited clean-images clean-none
+    do
+      $BASH_SOURCE $i
+    done
   ;;
   push) #git adds, commits and pushes all new changes
     $DIR/git.sh
