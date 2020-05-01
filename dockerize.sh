@@ -56,16 +56,16 @@ CMD [\"help\"]
     IDs=$($BASH_SOURCE images | awk '{print $3}')
     [ -z "$IDs" ] && echo "No relevant images found" || docker rmi $IDs
   ;;
-  build) #build the docker image
-    VERSION=
-    $BASH_SOURCE dockerfile \
-      | docker build -t $($BASH_SOURCE image) -
-  ;;
   push) #git adds, commits and pushes all new changes
     $DIR/git.sh
   ;;
+  build) #build the docker image
+    $BASH_SOURCE push
+    $BASH_SOURCE dockerfile \
+      | docker build -t $($BASH_SOURCE image) -
+  ;;
   rebuild) #
-    for i in clean-exited clean-images push build
+    for i in clean-exited clean-images build
     do
       $BASH_SOURCE $i || exit $?
     done
