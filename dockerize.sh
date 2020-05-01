@@ -31,7 +31,7 @@ case "$1" in
   echo "\
 FROM alpine:3.9.6
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
-RUN apk add --no-cache gnuplot git bash util-linux
+RUN apk add --no-cache gnuplot git bash util-linux gdlib
 WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
