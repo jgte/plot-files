@@ -318,7 +318,7 @@ else
 [ -d $(dirname $OUT) ] || mkdir -p $(dirname $OUT)
 $FORCE && [ -e "$OUT.$(extension $TERMINAL)" ] && rm -fv $OUT.$(extension $TERMINAL)
 [ -e "$OUT.$(extension $TERMINAL)" ] || gnuplot <<%
-set terminal $TERMINAL size 1200,900 font "$FONT"
+set terminal $TERMINAL
 set output "$OUT.$(extension $TERMINAL)"
 set autoscale
 set xtic auto
