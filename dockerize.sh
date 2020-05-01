@@ -41,12 +41,12 @@ RUN apk add --no-cache --update \
     ttf-ubuntu-font-family \
     msttcorefonts-installer \
     && update-ms-fonts \
-    && fc-cache -f \
+    && fc-cache -f 
 WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
-RUN git clone $($BASH_SOURCE github) . && rm -fr .git
 ENTRYPOINT [\"./entrypoint.sh\"]
-CMD [\"help\"]"
+CMD [\"help\"]
+RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
