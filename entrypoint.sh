@@ -9,7 +9,7 @@ case "$1" in
   ;;
   test) #test plot-files.sh
     exec ./test/test-plot-files.sh
-    exec cp -v ./test/test.png /iodir
+    exec mv -v ./test/test.png /iodir/
   ;;
   cat-test|example) #shows the test script
     exec cat ./test/test-plot-files.sh 
@@ -20,6 +20,6 @@ case "$1" in
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
     exec ./plot-files.sh "$@"
-    exec cp -v $(ls -t | head -n1) /iodir
+    exec mv -v $(ls -t | head -n1) /iodir/
   ;;
 esac
