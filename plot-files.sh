@@ -16,7 +16,7 @@ XDATA_FORMAT="%Y-%m-%d"
 POINTSIZE=0.5
 MAX_POINTSIZE=2
 XTICKS="float"
-TERMINAL=cairopng #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
+TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
 
 HELPSTR="
