@@ -11,7 +11,7 @@ git st
 
 if [ $# -eq 0 ]
 then
-  git ci -m 'routine development at $(date)'
+  git ci -m "routine development at $(date)"
 else
   git ci -m "$@"
 fi
