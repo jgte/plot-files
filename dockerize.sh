@@ -36,9 +36,7 @@ WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
 ENTRYPOINT ./entrypoint.sh
-CMD help
-"
-
+CMD help"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
@@ -80,7 +78,7 @@ CMD help
       | docker build -t $($BASH_SOURCE image) -
   ;;
   rebuild) #same as clean-exited clean-images build
-    for i in clean-exited clean-images build
+    for i in clean-all build
     do
       $BASH_SOURCE $i || exit $?
     done
