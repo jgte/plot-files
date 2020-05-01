@@ -35,8 +35,8 @@ RUN apk add --no-cache gnuplot git bash util-linux
 WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
-ENTRYPOINT ./entrypoint.sh
-CMD help"
+ENTRYPOINT [\"./entrypoint.sh\"]
+CMD [\"help\"]"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
