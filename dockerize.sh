@@ -1,19 +1,23 @@
 #!/bin/bash
 
 case "$1" in
-  "modes" ) #anchor
-    grep '#anchor' $BASH_SOURCE  
+  modes) #shows all available modes
+    grep ') #' $BASH_SOURCE \
+      | grep -v grep \
+      | sed 's:)::g' \
+      | column -t -s\#
   ;;
-  "test" ) #anchor
-    ./test/test-plot-files.sh && mv ./test/test.png .
+  test) #test plot-files.sh
+    exec ./test/test-plot-files.sh && mv ./test/test.png .
   ;;
-  "dockerfile") #anchor
+  cat-test|example) #shows the test script
+    exec cat ./test/test-plot-files.sh 
+  ;;
+  dockerfile) #show the dockerfile
   echo "\
 FROM alpine:3.9.6
 
-RUN apk update \
-  && apk upgrade \
-  && apk add --no-cache gnuplot git bash
+RUN apk add --no-cache gnuplot git bash
 
 WORKDIR /plot-files
 
@@ -24,12 +28,12 @@ ENTRYPOINT [\"./$(basename $BASH_SOURCE)\"]
 CMD [\"help\"]
 "
   ;;
-  "build") #anchor
+  build) #build the docker image
     VERSION=$(git log --pretty=format:"%as" | head -n1)
     $BASH_SOURCE dockerfile \
-      | docker build -t spacegravimetry/plot-files:$VERSION . -
+      | docker build -t spacegravimetry/plot-files:$VERSION -
   ;;
-  *)
-    ./plot-files.sh "$@"
+  *) #transparently pass all other arguments to ./plot-files.sh
+    exec ./plot-files.sh "$@"
   ;;
 esac
