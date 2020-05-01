@@ -83,7 +83,7 @@ CMD [\"help\"]"
       $BASH_SOURCE $i || exit $?
     done
   ;;
-  sh) #spins up a new container and starts an interactive shell
+  sh) #spins up a new container and starts an interactive shell in it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
     docker run -it --rm --volume=$PWD:/iodir $($BASH_SOURCE image) sh
   ;;

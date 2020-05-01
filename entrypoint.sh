@@ -10,7 +10,7 @@ case "$1" in
   test) #test plot-files.sh
     exec ./test/test-plot-files.sh
     exec mv -v ./test/test.png /iodir/
-    touch /iodir/bibi
+    ls -la /iodir/
   ;;
   cat-test|example) #shows the test script
     exec cat ./test/test-plot-files.sh 
