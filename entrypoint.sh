@@ -8,7 +8,8 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    exec ./test/test-plot-files.sh && cp -v ./test/test.png /iodir
+    exec ./test/test-plot-files.sh
+    exec cp -v ./test/test.png /iodir
   ;;
   cat-test|example) #shows the test script
     exec cat ./test/test-plot-files.sh 
@@ -18,6 +19,7 @@ case "$1" in
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
-    exec ./plot-files.sh "$@" && cp -v $(ls -t | head -n1) /iodir
+    exec ./plot-files.sh "$@"
+    exec cp -v $(ls -t | head -n1) /iodir
   ;;
 esac
