@@ -26,8 +26,8 @@ CMD [\"help\"]
   ;;
   "build") #anchor
     VERSION=$(git log --pretty=format:"%as" | head -n1)
-    $BASH_SOURCE dockerfile > Dockerfile
-    docker build -t  spacegravimetry/plot-files:$VERSION .
+    $BASH_SOURCE dockerfile \
+      | docker build -t spacegravimetry/plot-files:$VERSION . -
   ;;
   *)
     ./plot-files.sh "$@"
