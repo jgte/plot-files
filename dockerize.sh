@@ -31,7 +31,6 @@ case "$1" in
   echo "\
 FROM alpine:3.9.6
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
-RUN apk add --no-cache gnuplot libgd
 # https://github.com/pavlov99/docker-gnuplot/blob/master/Dockerfile
 RUN apk add --no-cache --update \
     git \
