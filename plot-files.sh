@@ -16,7 +16,7 @@ XDATA_FORMAT="%Y-%m-%d"
 POINTSIZE=0.5
 MAX_POINTSIZE=2
 XTICKS="float"
-TERMINAL=png #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
+TERMINAL=cairopng #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
 
 HELPSTR="
@@ -322,7 +322,7 @@ else
 [ -d $(dirname $OUT) ] || mkdir -p $(dirname $OUT)
 $FORCE && [ -e "$OUT.$(extension $TERMINAL)" ] && rm -fv $OUT.$(extension $TERMINAL)
 [ -e "$OUT.$(extension $TERMINAL)" ] || gnuplot <<%
-set terminal $TERMINAL size $SIZE font "$FONT"
+set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL"]] && echo enhanced)
 set output "$OUT.$(extension $TERMINAL)"
 set autoscale
 set xtic auto
