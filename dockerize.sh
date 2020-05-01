@@ -62,10 +62,6 @@ CMD [\"help\"]
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
     docker run $($BASH_SOURCE image) ${@:2}
   ;;
-  sh) #spins up a new container and passes all aditional arguments to it
-    [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run -it $($BASH_SOURCE image) /bin/bash
-  ;;
   *)
     echo "ERROR: cannot handle input argument '$1'"
     exit 3
