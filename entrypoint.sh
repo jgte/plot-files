@@ -8,7 +8,7 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    exec ./test/test-plot-files.sh
+    exec ./test/test-plot-files.sh && echo true || echo false
     exec mv -v ./test/test.png /iodir/
     ls -la /iodir/
   ;;
