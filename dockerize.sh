@@ -33,9 +33,12 @@ FROM alpine:3.9.6
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
 RUN apk add --no-cache gnuplot git bash util-linux
 WORKDIR /$($BASH_SOURCE app-name)
+ENTRYPOINT ./entrypoint.sh
+CMD help
+VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
-ENTRYPOINT [\"./entrypoint.sh\"]
-CMD [\"help\"]"
+"
+
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
@@ -45,12 +48,13 @@ CMD [\"help\"]"
   ;;
   clean-exited|clear-exited) #removes all exited containers for the latest version of the image
     IDs=$($BASH_SOURCE ps-exited)
-    [ -z "$IDs" ] && echo "No exited containers found" || docker rm $IDs
+    [ -z "$IDs" ] || docker rm $IDs
   ;;
   clean-none|clear-none) #removes all images with tag '<none>' as well as the corresponding containers
     for i in $(docker images | awk '/<none>/ {print $3}')
     do
-      docker rm $(docker ps -a |awk '/'$i'/ {print $1}')
+      IDs=$(docker ps -a |awk '/'$i'/ {print $1}')
+      [ -z "$IDs" ] || docker rm $IDs
       docker rmi $i
     done
   ;;
@@ -59,7 +63,7 @@ CMD [\"help\"]"
   ;;
   clean-images) #removes all images relevant to this app
     IDs=$($BASH_SOURCE images | awk '{print $3}')
-    [ -z "$IDs" ] && echo "No relevant images found" || docker rmi $IDs
+    [ -z "$IDs" ] || docker rmi $IDs
   ;;
   clean-all|clear-all) #removes all relevant images and containers
     for i in clean-exited clean-images clean-none
@@ -83,11 +87,11 @@ CMD [\"help\"]"
   ;;
   sh) #spins up a new container and starts an interactive shell
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run -it $($BASH_SOURCE image) sh
+    docker run -it --rm --volume=$PWD:/iodir $($BASH_SOURCE image) sh
   ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run $($BASH_SOURCE image) ${@:2}
+    docker run --rm --volume=$PWD:/iodir $($BASH_SOURCE image) ${@:2}
   ;;
   *)
     echo "ERROR: cannot handle input argument '$1'"
