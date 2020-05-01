@@ -58,6 +58,12 @@ CMD [\"help\"]
     $BASH_SOURCE dockerfile \
       | docker build -t $($BASH_SOURCE image) -
   ;;
+  rebuild)
+    for i in clean-exited clean-images build
+    do
+      $BASH_SOURCE $i || exit $?
+    done
+  ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
     docker run $($BASH_SOURCE image) ${@:2}
