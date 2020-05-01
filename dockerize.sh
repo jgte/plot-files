@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR=$(cd $(dirname $BASH_SOURCE);pwd)
+
 case "$1" in
   modes) #shows all available modes
     grep ') #' $BASH_SOURCE \
@@ -58,7 +60,10 @@ CMD [\"help\"]
     $BASH_SOURCE dockerfile \
       | docker build -t $($BASH_SOURCE image) -
   ;;
-  rebuild)
+  push) #git adds, commits and pushes all new changes
+    $DIR/git.sh
+  ;;
+  rebuild) #
     for i in clean-exited clean-images build
     do
       $BASH_SOURCE $i || exit $?
