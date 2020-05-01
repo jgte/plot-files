@@ -7,6 +7,8 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
+  bibi)
+    echo bibi
   test) #test plot-files.sh
     exec ./test/test-plot-files.sh && echo true || echo false
     exec mv -v ./test/test.png /iodir/
