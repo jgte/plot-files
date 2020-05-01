@@ -17,6 +17,7 @@ POINTSIZE=0.5
 MAX_POINTSIZE=2
 XTICKS="float"
 TERMINAL=png #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
+SIZE="1200,900"
 
 HELPSTR="
 Plots one or more column data files.
@@ -50,6 +51,7 @@ dyn-point-size      : increase marker size for each additional line
 -ylabel=...         : define y-axis label (defaults to none)
 demean              : remove the mean of all columns before plotting
 -terminal=...       : set the gnuplot terminal type (defaults to $TERMINAL)
+-size=...           : set the terminal suze (defaults to $SIZE)
 "
 
 DISPLAY_FLAG=false
@@ -97,6 +99,7 @@ do
   -ylabel=*)      YLABEL=${i/-ylabel=} ;;
   demean)         DEMEAN=true          ;;
   -terminal=*)    TERMINAL=${i/-terminal=} ;;
+  -size=*)        SIZE=${i/-size=}     ;;
   -h|help)        echo "$HELPSTR"; exit 0;;
   *)
     if [ -e $i ]
@@ -185,6 +188,7 @@ then
   echo "ylable      : $YLABEL"
   echo "demean      : $DEMEAN"
   echo "terminal    : $TERMINAL"
+  echo "size        : $SIZE"
 fi
 
 #determine xdata column
@@ -291,7 +295,7 @@ then
 prmpt () { (echo -n "gnuplot> " >&2) }
 gnuplotInPipe () {
   echo "
-set terminal x11 size 2100,900 font \"$FONT\"
+set terminal x11 size $SIZE font \"$FONT\"
 set autoscale
 set xtic auto
 set ytic auto
@@ -318,7 +322,7 @@ else
 [ -d $(dirname $OUT) ] || mkdir -p $(dirname $OUT)
 $FORCE && [ -e "$OUT.$(extension $TERMINAL)" ] && rm -fv $OUT.$(extension $TERMINAL)
 [ -e "$OUT.$(extension $TERMINAL)" ] || gnuplot <<%
-set terminal $TERMINAL
+set terminal $TERMINAL size $SIZE font "$FONT"
 set output "$OUT.$(extension $TERMINAL)"
 set autoscale
 set xtic auto
