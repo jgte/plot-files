@@ -9,7 +9,8 @@ case "$1" in
   ;;
   test) #test plot-files.sh
     ./test/test-plot-files.sh \
-      && mv -v ./test/test.png /iodir/
+      && mv -v ./test/test.png /iodir/ \
+      || echo "ERROR..."
   ;;
   cat-test|example) #shows the test script
     exec cat ./test/test-plot-files.sh 
