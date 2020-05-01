@@ -322,7 +322,7 @@ else
 [ -d $(dirname $OUT) ] || mkdir -p $(dirname $OUT)
 $FORCE && [ -e "$OUT.$(extension $TERMINAL)" ] && rm -fv $OUT.$(extension $TERMINAL)
 [ -e "$OUT.$(extension $TERMINAL)" ] || gnuplot <<%
-set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL"]] && echo enhanced)
+set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL" ]] && echo enhanced)
 set output "$OUT.$(extension $TERMINAL)"
 set autoscale
 set xtic auto
