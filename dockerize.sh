@@ -31,7 +31,18 @@ case "$1" in
   echo "\
 FROM alpine:3.9.6
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
-RUN apk add --no-cache gnuplot git bash util-linux libgd
+RUN apk add --no-cache gnuplot libgd
+# https://github.com/pavlov99/docker-gnuplot/blob/master/Dockerfile
+RUN apk add --no-cache --update \
+    git \
+    bash \
+    util-linux \
+    gnuplot \
+    fontconfig \
+    ttf-ubuntu-font-family \
+    msttcorefonts-installer \
+    && update-ms-fonts \
+    && fc-cache -f \
 WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
