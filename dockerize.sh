@@ -85,7 +85,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   build) #build the docker image
     $BASH_SOURCE push
     $BASH_SOURCE dockerfile \
-      | docker build -t $($BASH_SOURCE image) -
+      | docker build -t $($BASH_SOURCE image) --no-cache -
   ;;
   rebuild) #same as clean-exited clean-images build
     for i in clean-all build
