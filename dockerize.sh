@@ -28,11 +28,11 @@ case "$1" in
   echo "\
 FROM alpine:3.9.6
 
-RUN apk add --no-cache gnuplot git bash
+RUN apk add --no-cache gnuplot git bash util-linux
 
 WORKDIR /$($BASH_SOURCE app-name)
 
-RUN git clone $($BASH_SOURCE github-repo) .
+RUN git clone $($BASH_SOURCE github-repo) . && rm -fr .git
 
 ENTRYPOINT [\"./entrypoint.sh\"]
 
@@ -64,11 +64,15 @@ CMD [\"help\"]
     $BASH_SOURCE dockerfile \
       | docker build -t $($BASH_SOURCE image) -
   ;;
-  rebuild) #
+  rebuild) #same as clean-exited clean-images build
     for i in clean-exited clean-images build
     do
       $BASH_SOURCE $i || exit $?
     done
+  ;;
+  sh) #spins up a new container and starts an interactive shell
+    [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
+    docker run -it $($BASH_SOURCE image) sh
   ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
