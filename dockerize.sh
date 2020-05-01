@@ -7,11 +7,20 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
-  test) #test plot-files.sh
-    exec ./test/test-plot-files.sh && mv ./test/test.png .
+  dockerhub-user) #shows all available modes
+    echo spacegravimetry
   ;;
-  cat-test|example) #shows the test script
-    exec cat ./test/test-plot-files.sh 
+  github-repo) #shows all available modes
+    echo https://github.com/jgte/plot-files.git
+  ;;
+  app-name) #shows all available modes
+    echo plot-files
+  ;;
+  version) #shows the latest version of the image
+    git log --pretty=format:"%as" | head -n1
+  ;;
+  image) #shows all available modes
+    echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
   ;;
   dockerfile) #show the dockerfile
   echo "\
@@ -19,21 +28,46 @@ FROM alpine:3.9.6
 
 RUN apk add --no-cache gnuplot git bash
 
-WORKDIR /plot-files
+WORKDIR /$($BASH_SOURCE app-name)
 
-RUN git clone https://github.com/jgte/plot-files.git . && rm -fr .git/
+RUN git clone $($BASH_SOURCE github-repo) .
 
-ENTRYPOINT [\"./$(basename $BASH_SOURCE)\"]
+ENTRYPOINT [\"./entrypoint.sh\"]
 
 CMD [\"help\"]
 "
   ;;
-  build) #build the docker image
-    VERSION=$(git log --pretty=format:"%as" | head -n1)
-    $BASH_SOURCE dockerfile \
-      | docker build -t spacegravimetry/plot-files:$VERSION -
+  ps-a) #shows all containers IDs for the latest version of the image
+    docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
   ;;
-  *) #transparently pass all other arguments to ./plot-files.sh
-    exec ./plot-files.sh "$@"
+  ps-exited) #shows all containers IDs for the latest version of the image that have exited
+    docker ps -a | grep $($BASH_SOURCE image) | awk '/Exited \(/ {print $1}'
+  ;;
+  clean-exited) #removes all exited containers for the latest version of the image
+    IDs=$($BASH_SOURCE ps-exited)
+    [ -z "$IDs" ] && echo "No exited containers found" || docker rm $IDs
+  ;;
+  images) #shows all images relevant to this app
+    docker images | grep $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name)
+  ;;
+  clean-images) #removes all images relevant to this app
+    docker rmi $($BASH_SOURCE images | awk '{print $3}')
+  ;;
+  build) #build the docker image
+    VERSION=
+    $BASH_SOURCE dockerfile \
+      | docker build -t $($BASH_SOURCE image) -
+  ;;
+  run) #spins up a new container and passes all aditional arguments to it
+    [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
+    docker run $($BASH_SOURCE image) ${@:2}
+  ;;
+  sh) #spins up a new container and passes all aditional arguments to it
+    [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
+    docker run -it $($BASH_SOURCE image) /bin/bash
+  ;;
+  *)
+    echo "ERROR: cannot handle input argument '$1'"
+    exit 3
   ;;
 esac
