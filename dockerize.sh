@@ -9,10 +9,13 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
+  author|Author)
+    echo teixeira@csr.utexas.edu
+  ;;
   dockerhub-user) #shows dockerhub usename
     echo spacegravimetry
   ;;
-  github-repo) #shows github repo URL
+  github|GitHub) #shows github repo URL
     echo https://github.com/jgte/plot-files.git
   ;;
   app-name) #shows current app's name
@@ -21,23 +24,18 @@ case "$1" in
   version) #shows the latest version of the image
     git log --pretty=format:"%as" | head -n1
   ;;
-  image) #shows all available modes
+  image|tag) #shows the image tag
     echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
   ;;
   dockerfile) #show the dockerfile
   echo "\
 FROM alpine:3.9.6
-
+$(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
 RUN apk add --no-cache gnuplot git bash util-linux
-
 WORKDIR /$($BASH_SOURCE app-name)
-
-RUN git clone $($BASH_SOURCE github-repo) . && rm -fr .git
-
+RUN git clone $($BASH_SOURCE github) . && rm -fr .git
 ENTRYPOINT [\"./entrypoint.sh\"]
-
-CMD [\"help\"]
-"
+CMD [\"help\"]"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
