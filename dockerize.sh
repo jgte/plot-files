@@ -33,10 +33,10 @@ FROM alpine:3.9.6
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
 RUN apk add --no-cache gnuplot git bash util-linux
 WORKDIR /$($BASH_SOURCE app-name)
-ENTRYPOINT ./entrypoint.sh
-CMD help
 VOLUME /iodir
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git
+ENTRYPOINT ./entrypoint.sh
+CMD help
 "
 
   ;;
