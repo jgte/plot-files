@@ -79,11 +79,14 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
       $BASH_SOURCE $i
     done
   ;;
-  push) #git adds, commits and pushes all new changes
+  git-push) #git adds, commits and pushes all new changes
     $DIR/git.sh
   ;;
+  push) #pushes images to dockerhub
+    docker push $($BASH_SOURCE image)
+  ;;
   build) #build the docker image
-    $BASH_SOURCE push
+    $BASH_SOURCE git-push
     $BASH_SOURCE dockerfile \
       | docker build -t $($BASH_SOURCE image) -
   ;;
