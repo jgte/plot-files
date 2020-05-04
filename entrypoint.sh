@@ -20,7 +20,14 @@ case "$1" in
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
-    ./plot-files.sh "$@" \
-      && mv -v $(ls -t | head -n1) /iodir/
+    #save current dir contents
+    ls -1 > /tmp/ls.$$
+    #plot it
+    ./plot-files.sh "$@" || exit $?
+    #diff current dir contents relative to records to get the resulting plot
+    OUT=$(ls -t $(diff  <(ls -1) /tmp/ls.$$ | grep -e '^<'| sed 's:<::g' | head -n1))
+    [ -z "$OUT" ] && exit 3
+    mv -v $OUT /iodir/
+    rm -f /tmp/ls.$$
   ;;
 esac
