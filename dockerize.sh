@@ -105,17 +105,22 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     docker run --rm --volume=$PWD:/iodir $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
+  s-image)
+    echo $($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
+  ;;
   s-pull)
     module load tacc-singularity
     singularity pull docker://$($BASH_SOURCE image)
-  ;;
-  s-image)
-    echo $($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
   ;;
   s-sh)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     singularity shell $($BASH_SOURCE s-image)
+  ;;
+  s-run)
+    module load tacc-singularity
+    [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
+    singularity exec --cleanenv $($BASH_SOURCE s-image) run ${@:2}
   ;;
   *)
     echo "ERROR: cannot handle input argument '$1'"
