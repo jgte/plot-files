@@ -11,6 +11,7 @@ case "$1" in
   ;;
   test) #test plot-files.sh
     $APPDIR/test/test-plot-files.sh
+    #this is needed for docker
     OUT=$(ls $APPDIR/test/test.png)
     echo "OUT=$OUT"
     [ -z "$OUT" ] && exit
@@ -24,11 +25,11 @@ case "$1" in
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
-    #save current dir contents
+    #save current dir contents (needed for docker)
     ls -1 $APPDIR/ > /tmp/ls.$$
     #plot it
     $APPDIR/plot-files.sh "$@" || exit $?
-    #diff current dir contents relative to records to get the resulting plot
+    #diff current dir contents relative to records to get the resulting plot (needed for docker)
     OUT=$(ls -t $(diff  <(ls -1 $APPDIR/) /tmp/ls.$$ | grep -e '^<'| sed 's:<::g' | head -n1))
     [ -z "$OUT" ] && exit
     mv -v $OUT /iodir/
