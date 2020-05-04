@@ -120,7 +120,12 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   s-run)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity exec --cleanenv $($BASH_SOURCE s-image) ./entrypoint.sh ${@:2}
+    singularity exec --cleanenv $($BASH_SOURCE s-image) ./plot-files.sh ${@:2}
+  ;;
+  s-test)
+    module load tacc-singularity
+    [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
+    singularity exec --cleanenv $($BASH_SOURCE s-image) ./test/test-plot-files.sh ${@:2}
   ;;
   *)
     echo "ERROR: cannot handle input argument '$1'"
