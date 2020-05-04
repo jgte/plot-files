@@ -30,8 +30,8 @@ Mandatory arguments:
   columnXlabel : label to give to the column in this data
 
 Optional arguments  :
-display             : shows the plot (with file name file.$(extension $TERMINAL))
-interactive         : do not produce file $1.$(extension $TERMINAL) but show it in x11
+display             : shows the plot (after writing the output file)
+interactive         : do not produce the output file but show it in x11
 -title=...          : set the title explicitly
 -out=...            : name of plot file, defaults to first data file (.$(extension $TERMINAL) extension added automaticall)
 -filelabels=...     : label the data in the file(s) according to this comma-separated list
