@@ -1,7 +1,8 @@
 #!/bin/bash
 
-APPDIR=$(cd $(dirname $BASH_SOURCE);pwd)
-IODIR=$($APPDIR/dockerize.sh app-dir)
+DIR=$(cd $(dirname $BASH_SOURCE);pwd)
+APPDIR=$($DIR/dockerize.sh app-dir)
+IODIR=$($DIR/dockerize.sh io-dir)
 
 case "$1" in
   modes) #shows all available modes
