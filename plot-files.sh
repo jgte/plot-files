@@ -34,6 +34,7 @@ display             : shows the plot (after writing the output file)
 interactive         : do not produce the output file but show it in x11
 -title=...          : set the title explicitly
 -out=...            : name of plot file, defaults to first data file (.$(extension $TERMINAL) extension added automaticall)
+-outdir=...         : save plot file to this dir (can also be specified in -out= but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in -out=)
 -filelabels=...     : label the data in the file(s) according to this comma-separated list
 quiet               : limit the user feedback
 force               : delete plot file (if existing), by default no replotting is done
@@ -60,6 +61,7 @@ FILE_LIST=()
 LABELS=
 TITLE=
 OUT=
+OUTDIR=
 FILE_LABELS=
 QUIET=false
 DEBUG=false
@@ -81,6 +83,7 @@ do
   interactive)    INTERACTIVE=true     ;;
   -title=*)       TITLE=${i/-title=}   ;;
   -out=*)         OUT=${i/-out=}       ;;
+  -outdir=*)      OUTDIR=${i/-outdir=} ;;
   -filelabels=*)  FILE_LABELS=${i/-filelabels=}; FILE_LABELS=(${FILE_LABELS//,/ }) ;;
   quiet)          QUIET=true           ;;
   debug)          DEBUG=true           ;;
@@ -128,6 +131,8 @@ fi
 
 #if no -out= was given, make up something
 [ -z "$OUT" ] && OUT=${FILE_LIST[0]}
+[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
+
 
 if [ -z "$FILE_LABELS" ]
 then
@@ -178,6 +183,7 @@ then
   echo "interactive : $INTERACTIVE"
   echo "title       : $TITLE"
   echo "out         : $OUT"
+  echo "out dir     : $OUTDIR"
   echo "file labels : ${FILE_LABELS[@]}"
   echo "xticks      : $XTICKS"
   echo "date-format : $XDATA_FORMAT"

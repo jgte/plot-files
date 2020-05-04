@@ -1,6 +1,7 @@
 #!/bin/bash
 
-APPDIR=/plot-files
+APPDIR=$(cd $(dirname $BASH_SOURCE);pwd)
+IODIR=$($APPDIR/dockerize.sh io-dir)
 
 case "$1" in
   modes) #shows all available modes
@@ -10,7 +11,7 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    $APPDIR/test/test-plot-files.sh
+    exec $APPDIR/test/test-plot-files.sh -outdir=$IODIR
   ;;
   cat-test|example) #shows the test script
     exec cat $APPDIR/test/test-plot-files.sh 
@@ -19,6 +20,6 @@ case "$1" in
     exec /bin/bash -i
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
-    $APPDIR/plot-files.sh "$@" 
+    exec $APPDIR/plot-files.sh "$@" -outdir=$IODIR
   ;;
 esac

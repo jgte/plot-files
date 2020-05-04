@@ -21,6 +21,12 @@ case "$1" in
   app-name) #shows current app's name
     echo plot-files
   ;;
+  app-dir) #shows the directory where the app will be sitting inside the container
+    echo /$(BASH_SOURCE app-name)
+  ;;
+  io-dir) #shows the directory where the files will be save to inside the container
+    echo /iodir
+  ;;
   version) #shows the latest version of the image
     git -C $DIR log --pretty=format:%ad --date=short | head -n1
   ;;
@@ -42,7 +48,8 @@ RUN apk add --no-cache --update \
     msttcorefonts-installer \
     && update-ms-fonts \
     && fc-cache -f 
-WORKDIR /$($BASH_SOURCE app-name)
+VOLUME $($BASH_SOURCE io-dir)
+WORKDIR $($BASH_SOURCE app-dirapp)
 ENTRYPOINT [\"./entrypoint.sh\"]
 CMD [\"help\"]
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
@@ -97,11 +104,11 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   sh) #spins up a new container and starts an interactive shell in it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run -it --rm --volume=$PWD:/$($BASH_SOURCE app-name) $($BASH_SOURCE image) sh
+    docker run -it --rm --volume=$PWD:/$($BASH_SOURCE io-dir) $($BASH_SOURCE image) sh
   ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run --rm --volume=$PWD:/$($BASH_SOURCE app-name) $($BASH_SOURCE image) ${@:2}
+    docker run --rm --volume=$PWD:/$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
   s-image)
@@ -114,15 +121,15 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   s-sh)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity shell -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image)
+    singularity shell -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)
   ;;
   s-shw)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image)w ] || singularity build --sandbox $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
-    singularity shell -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image)w
+    singularity shell -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)w
   ;;
   s-com)
-   echo singularity exec -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh ${@:2}
+   echo singularity exec -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image) $($BASH_SOURCE app-dir)/entrypoint.sh ${@:2}
   ;;
   s-run)
     module load tacc-singularity
@@ -144,7 +151,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
 
 module load tacc-singularity
 
-singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh $(for i in "${@:2}"; do echo -n "\"$i\" "; done)
+$($BASH_SOURCE s-com) $(for i in "${@:2}"; do echo -n "\"$i\" "; done)
 "
   ;;
   s-submit)
