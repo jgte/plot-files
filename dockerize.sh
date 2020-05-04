@@ -121,10 +121,13 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     [ -e $($BASH_SOURCE s-image)w ] || singularity build --sandbox $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
     singularity shell -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image)w
   ;;
+  s-com)
+   echo singularity exec -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh
+  ;;
   s-run)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity exec -B $PWD:/$($BASH_SOURCE app-name) --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh ${@:2}
+    $($BASH_SOURCE s-com) ${@:2}
   ;;
   s-slurm-script)
     echo "\
