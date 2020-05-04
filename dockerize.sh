@@ -110,7 +110,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   s-pull)
     module load tacc-singularity
-    singularity pull docker://$($BASH_SOURCE image)
+    singularity pull --name $($BASH_SOURCE s-image) docker://$($BASH_SOURCE image)
   ;;
   s-sh)
     module load tacc-singularity
@@ -120,12 +120,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   s-run)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh ${@:2}
-  ;;
-  s-test)
-    module load tacc-singularity
-    [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/test/test-plot-files.sh ${@:2}
+    singularity exec -B /iodir:$PWD --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh ${@:2}
   ;;
   s-slurm-script)
     echo "\
