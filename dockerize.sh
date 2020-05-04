@@ -35,19 +35,8 @@ case "$1" in
   ;;
   dockerfile) #show the dockerfile
   echo "\
-FROM alpine:3.9.6
+FROM esolang/gnuplot:latest
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
-# https://github.com/pavlov99/docker-gnuplot/blob/master/Dockerfile
-RUN apk add --no-cache --update \
-    git \
-    bash \
-    util-linux \
-    gnuplot \
-    fontconfig \
-    ttf-ubuntu-font-family \
-    msttcorefonts-installer \
-    && update-ms-fonts \
-    && fc-cache -f 
 VOLUME $($BASH_SOURCE io-dir)
 WORKDIR $($BASH_SOURCE app-dir)
 ENTRYPOINT [\"./entrypoint.sh\"]
@@ -111,32 +100,32 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     docker run --rm --volume=$PWD:/$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
-  s-image)
+  s-image) #return the name of the singularity image file
     echo $DIR/$($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
   ;;
-  s-pull)
+  s-pull) #pulls the singularity image from docker hub
     module load tacc-singularity
     singularity pull --name $($BASH_SOURCE s-image) docker://$($BASH_SOURCE image)
   ;;
-  s-sh)
+  s-sh) #spins up a new singularity container and starts an interactive shell in it
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     singularity shell -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)
   ;;
-  s-shw)
+  s-shw) #spins up a new writable singularity container and starts an interactive shell in it
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image)w ] || singularity build --sandbox $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
     singularity shell -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)w
   ;;
-  s-com)
+  s-com) #shows the command used to run the app it the singularity container
    echo singularity exec -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image) $($BASH_SOURCE app-dir)/entrypoint.sh ${@:2}
-  ;;
-  s-run)
+  ;; 
+  s-run) #spins up a new singularity container and passes all aditional arguments to it
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     $($BASH_SOURCE s-com) ${@:2}
   ;;
-  s-slurm-script)
+  s-slurm-script) #shows the slurm script used to commit an instance of the app to the grace-serial queue
     echo "\
 #!/bin/bash
 
@@ -154,7 +143,7 @@ module load tacc-singularity
 $($BASH_SOURCE s-com) $(for i in "${@:2}"; do echo -n "\"$i\" "; done)
 "
   ;;
-  s-submit)
+  s-submit) #submits a job with a call to the app to the grace-queue
     $BASH_SOURCE s-slurm-script "${@:2}" > $PWD/$($BASH_SOURCE app-name).slurm
     sbatch $PWD/$($BASH_SOURCE app-name).slurm
   ;;
