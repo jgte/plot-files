@@ -71,9 +71,8 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ps-exited) #shows all containers IDs for the latest version of the image that have exited
     docker ps -a | grep $($BASH_SOURCE image) | awk '/Exited \(/ {print $1}'
   ;;
-  clean-exited|clear-exited) #removes all exited containers for the latest version of the image
-    IDs=$($BASH_SOURCE ps-exited)
-    [ -z "$IDs" ] || docker rm $IDs
+  images) #shows all images relevant to this app
+    docker images | grep $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name)
   ;;
   clean-none|clear-none) #removes all images with tag '<none>' as well as the corresponding containers
     for i in $(docker images | awk '/<none>/ {print $3}')
@@ -83,8 +82,9 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
       docker rmi $i
     done
   ;;
-  images) #shows all images relevant to this app
-    docker images | grep $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name)
+  clean-exited|clear-exited) #removes all exited containers for the latest version of the image
+    IDs=$($BASH_SOURCE ps-exited)
+    [ -z "$IDs" ] || docker rm $IDs
   ;;
   clean-images) #removes all images relevant to this app
     IDs=$($BASH_SOURCE images | awk '{print $3}')
