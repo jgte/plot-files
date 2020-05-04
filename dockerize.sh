@@ -22,7 +22,7 @@ case "$1" in
     echo plot-files
   ;;
   app-dir) #shows the directory where the app will be sitting inside the container
-    echo /$(BASH_SOURCE app-name)
+    echo /$($BASH_SOURCE app-name)
   ;;
   io-dir) #shows the directory where the files will be save to inside the container
     echo /iodir
@@ -49,7 +49,7 @@ RUN apk add --no-cache --update \
     && update-ms-fonts \
     && fc-cache -f 
 VOLUME $($BASH_SOURCE io-dir)
-WORKDIR $($BASH_SOURCE app-dirapp)
+WORKDIR $($BASH_SOURCE app-dir)
 ENTRYPOINT [\"./entrypoint.sh\"]
 CMD [\"help\"]
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
