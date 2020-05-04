@@ -1,5 +1,7 @@
 #!/bin/bash
 
+APPDIR=/plot-files
+
 case "$1" in
   modes) #shows all available modes
     grep ') #' $BASH_SOURCE \
@@ -8,12 +10,12 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    ./test/test-plot-files.sh \
-      && mv -v ./test/test.png /iodir/ \
+    $APPDIR/test/test-plot-files.sh \
+      && mv -v $APPDIR/test/test.png /iodir/ \
       || echo "ERROR..."
   ;;
   cat-test|example) #shows the test script
-    exec cat ./test/test-plot-files.sh 
+    exec cat $APPDIR/test/test-plot-files.sh 
   ;;
   sh) #run the shell instead of plot-files.sh
     exec /bin/bash -i
@@ -23,7 +25,7 @@ case "$1" in
     #save current dir contents
     ls -1 > /tmp/ls.$$
     #plot it
-    ./plot-files.sh "$@" || exit $?
+    $APPDIR/plot-files.sh "$@" || exit $?
     #diff current dir contents relative to records to get the resulting plot
     OUT=$(ls -t $(diff  <(ls -1) /tmp/ls.$$ | grep -e '^<'| sed 's:<::g' | head -n1))
     [ -z "$OUT" ] && exit 3
