@@ -146,7 +146,7 @@ singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh ${@:2}
 "
   ;;
   s-submit)
-    $BASH_SOURCE s-slurm-script ${@:2} > $PWD/$($BASH_SOURCE app-name).slurm
+    $BASH_SOURCE s-slurm-script "${@:2}" > $PWD/$($BASH_SOURCE app-name).slurm
     sbatch $PWD/$($BASH_SOURCE app-name).slurm
   ;;
   *)
