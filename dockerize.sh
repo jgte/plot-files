@@ -43,7 +43,6 @@ RUN apk add --no-cache --update \
     && update-ms-fonts \
     && fc-cache -f 
 WORKDIR /$($BASH_SOURCE app-name)
-VOLUME /iodir
 ENTRYPOINT [\"./entrypoint.sh\"]
 CMD [\"help\"]
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
@@ -98,11 +97,11 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   sh) #spins up a new container and starts an interactive shell in it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run -it --rm --volume=$PWD:/iodir $($BASH_SOURCE image) sh
+    docker run -it --rm --volume=$PWD:/$($BASH_SOURCE app-name) $($BASH_SOURCE image) sh
   ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run --rm --volume=$PWD:/iodir $($BASH_SOURCE image) ${@:2}
+    docker run --rm --volume=$PWD:/$($BASH_SOURCE app-name) $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
   s-image)
