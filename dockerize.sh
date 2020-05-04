@@ -47,7 +47,7 @@ VOLUME /iodir
 ENTRYPOINT [\"./entrypoint.sh\"]
 CMD [\"help\"]
 ADD \"https://www.random.org/cgi-bin/randbyte?nbytes=4&format=h\" skipcache
-RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
+RUN git clone $($BASH_SOURCE github) . || git pull"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
