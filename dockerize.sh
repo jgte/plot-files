@@ -142,7 +142,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
 
 module load tacc-singularity
 
-singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh ${@:2}
+singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh $(for i in "${@:2}"; do echo -n "\"$i\" "; done)
 "
   ;;
   s-submit)
