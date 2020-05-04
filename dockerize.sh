@@ -119,7 +119,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   s-shw)
     module load tacc-singularity
-    singularity build --writable --name $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
+    [ -e $($BASH_SOURCE s-image)w ] || singularity build --sandbox $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
     singularity shell -B $PWD:/iodir --cleanenv $($BASH_SOURCE s-image)w
   ;;
   s-run)
