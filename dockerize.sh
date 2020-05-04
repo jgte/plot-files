@@ -109,6 +109,7 @@ do
       echo $($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
     ;;
     s-sh)
+      module load tacc-singularity
       [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
       singularity shell $($BASH_SOURCE s-image)
     ;;
