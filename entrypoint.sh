@@ -10,12 +10,7 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    $APPDIR/test/test-plot-files.sh
-    #this is needed for docker
-    OUT=$(ls $APPDIR/test/test.png)
-    echo "OUT=$OUT"
-    [ -z "$OUT" ] && exit
-    mv -v $OUT /iodir/
+    $APPDIR/test/test-plot-files.sh && mv -v $APPDIR/test/test.png $APPDIR/
   ;;
   cat-test|example) #shows the test script
     exec cat $APPDIR/test/test-plot-files.sh 
@@ -25,14 +20,7 @@ case "$1" in
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
     echo "Calling plot-files.sh $@:"
-    #save current dir contents (needed for docker)
-    ls -1 $APPDIR/ > /tmp/ls.$$
     #plot it
     $APPDIR/plot-files.sh "$@" || exit $?
-    #diff current dir contents relative to records to get the resulting plot (needed for docker)
-    OUT=$(ls -t $(diff  <(ls -1 $APPDIR/) /tmp/ls.$$ | grep -e '^<'| sed 's:<::g' | head -n1))
-    [ -z "$OUT" ] && exit
-    mv -v $OUT /iodir/
-    rm -f /tmp/ls.$$
   ;;
 esac
