@@ -1,7 +1,7 @@
 #!/bin/bash
 
-APPDIR=$(cd $(dirname $BASH_SOURCE);pwd)
-IODIR=$($APPDIR/dockerize.sh io-dir)
+APPDIR=/plot-files
+IODIR=/iodir
 
 case "$1" in
   modes) #shows all available modes
