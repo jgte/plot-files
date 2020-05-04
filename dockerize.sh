@@ -30,12 +30,34 @@ case "$1" in
   version) #shows the latest version of the image
     git -C $DIR log --pretty=format:%ad --date=short | head -n1
   ;;
+  gnuplot-image) #shows the name if the gnuplot image
+    echo $($BASH_SOURCE dockerhub-user)/gnuplot:latest
+  ;;
+  gnuplot-rebuild) #build the gnuplot image (slow, should not change significantly)
+    IDs=$($BASH_SOURCE gnuplot-images | awk '{print $3}')
+    [ -z "$IDs" ] || docker rmi -f $IDs
+  echo "\
+FROM alpine:3.9.6
+# based on https://github.com/pavlov99/docker-gnuplot/blob/master/Dockerfile
+RUN apk add --no-cache --update \
+    git \
+    bash \
+    util-linux \
+    gnuplot \
+    fontconfig \
+    ttf-ubuntu-font-family \
+    msttcorefonts-installer \
+    && update-ms-fonts \
+    && fc-cache -f 
+" | docker build -t $($BASH_SOURCE gnuplot-image) -
+    docker push $($BASH_SOURCE gnuplot-image)
+  ;;
   image|tag) #shows the image tag
     echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
   ;;
   dockerfile) #show the dockerfile
   echo "\
-FROM esolang/gnuplot:latest
+FROM $($BASH_SOURCE gnuplot-image)
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
 VOLUME $($BASH_SOURCE io-dir)
 WORKDIR $($BASH_SOURCE app-dir)
