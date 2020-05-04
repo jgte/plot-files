@@ -46,6 +46,7 @@ WORKDIR /$($BASH_SOURCE app-name)
 VOLUME /iodir
 ENTRYPOINT [\"./entrypoint.sh\"]
 CMD [\"help\"]
+ADD \"https://www.random.org/cgi-bin/randbyte?nbytes=4&format=h\" skipcache
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
@@ -91,7 +92,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
       | docker build -t $($BASH_SOURCE image) -
   ;;
   rebuild) #same as clean-exited clean-images build
-    for i in clean-all build
+    for i in clean-all build push
     do
       $BASH_SOURCE $i || exit $?
     done
