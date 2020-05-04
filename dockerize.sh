@@ -106,7 +106,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   # ---------- TACC stuff ---------
   s-image)
-    echo $($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
+    echo $DIR/$($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
   ;;
   s-pull)
     module load tacc-singularity
@@ -127,8 +127,27 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/test/test-plot-files.sh ${@:2}
   ;;
-  s-submit)
+  s-slurm-script)
+    echo "\
+#!/bin/bash
 
+#SBATCH -J $($BASH_SOURCE app-name)
+#SBATCH -o $($BASH_SOURCE app-name).o.%j
+#SBATCH -e $($BASH_SOURCE app-name).e.%j
+#SBATCH -p grace-serial
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -t 00:01:00
+#SBATCH -A A-byab
+
+module load tacc-singularity
+
+singularity exec --cleanenv $($BASH_SOURCE s-image) $DIR/plot-files.sh ${@:2}
+"
+  ;;
+  s-submit)
+    $($BASH_SOURCE s-slurm-script) > $PWD/$($BASH_SOURCE app-name).slurm
+    sbatch $PWD/$($BASH_SOURCE app-name).slurm
   ;;
   *)
     echo "ERROR: cannot handle input argument '$1'"
