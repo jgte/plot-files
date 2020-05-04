@@ -22,7 +22,7 @@ case "$1" in
     echo plot-files
   ;;
   version) #shows the latest version of the image
-    git log --pretty=format:"%as" | head -n1
+    git -C $DIR log --pretty=format:%ad --date=short | head -n1
   ;;
   image|tag) #shows the image tag
     echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
