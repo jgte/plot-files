@@ -10,7 +10,7 @@ case "$1" in
       | column -t -s\#
   ;;
   test) #test plot-files.sh
-    $APPDIR/test/test-plot-files.sh && mv -v $APPDIR/test/test.png $APPDIR/
+    $APPDIR/test/test-plot-files.sh
   ;;
   cat-test|example) #shows the test script
     exec cat $APPDIR/test/test-plot-files.sh 
@@ -19,8 +19,6 @@ case "$1" in
     exec /bin/bash -i
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
-    echo "Calling plot-files.sh $@:"
-    #plot it
-    $APPDIR/plot-files.sh "$@" || exit $?
+    $APPDIR/plot-files.sh "$@" 
   ;;
 esac
