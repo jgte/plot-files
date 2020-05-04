@@ -115,12 +115,12 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   s-sh)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity shell $($BASH_SOURCE s-image)
+    singularity shell -B $PWD:/iodir --cleanenv $($BASH_SOURCE s-image)
   ;;
   s-run)
     module load tacc-singularity
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
-    singularity exec -B /iodir:$PWD --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh ${@:2}
+    singularity exec -B $PWD:/iodir --cleanenv $($BASH_SOURCE s-image) /$($BASH_SOURCE app-name)/entrypoint.sh ${@:2}
   ;;
   s-slurm-script)
     echo "\
