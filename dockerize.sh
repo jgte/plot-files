@@ -71,7 +71,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   clean-images) #removes all images relevant to this app
     IDs=$($BASH_SOURCE images | awk '{print $3}')
-    [ -z "$IDs" ] || docker rmi $IDs
+    [ -z "$IDs" ] || docker rmi -f $IDs
   ;;
   clean-all|clear-all) #removes all relevant images and containers
     for i in clean-exited clean-images clean-none
