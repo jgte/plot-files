@@ -171,8 +171,19 @@ then
   done
 fi
 
-#get number of columns to plot
-NR_COLS=${#LABELS[@]}
+#retrieve expected extension
+EXT=$(extension $TERMINAL)
+#resolving output file name
+if [ -z "$OUT" ]
+then
+  #if no -out= was given, make up something
+  OUT=${FILE_LIST[0]}
+else
+  #out was given, add extension (if needed)
+  OUT=${OUT%\.$EXT}.$EXT
+fi
+#if an outdir was given, prepend it to basename of out
+[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
 
 if ! $QUIET
 then
@@ -184,6 +195,7 @@ then
   echo "title       : $TITLE"
   echo "out         : $OUT"
   echo "out dir     : $OUTDIR"
+  echo "extension   : $EXT"
   echo "file labels : ${FILE_LABELS[@]}"
   echo "xticks      : $XTICKS"
   echo "date-format : $XDATA_FORMAT"
@@ -325,11 +337,10 @@ $PLOT_CMD"
 gnuplotInPipe $1 | gnuplot 
 else
 
-[ -d $(dirname $OUT) ] || mkdir -p $(dirname $OUT)
-$FORCE && [ -e "$OUT.$(extension $TERMINAL)" ] && rm -fv $OUT.$(extension $TERMINAL)
-[ -e "$OUT.$(extension $TERMINAL)" ] || gnuplot <<%
+[ -d $(dirname "$OUT") ] || mkdir -p $(dirname "$OUT")
+[ -e "$OUT" ] || gnuplot <<%
 set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL" ]] && echo enhanced)
-set output "$OUT.$(extension $TERMINAL)"
+set output "$OUT"
 set autoscale
 set xtic auto
 set ytic auto
@@ -340,7 +351,7 @@ set ylabel "$YLABEL"
 $PLOT_CMD
 %
 
-$DISPLAY_FLAG && display "$OUT.$(extension $TERMINAL)" || echo "plotted $OUT.$(extension $TERMINAL)"
+$DISPLAY_FLAG && display "$OUT" || echo "plotted $OUT"
 
 fi
 
