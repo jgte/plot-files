@@ -9,7 +9,7 @@ case "$1" in
       | sed 's:)::g' \
       | column -t -s\#
   ;;
-  author|Author)
+  author|Author) #shows the author's email
     echo teixeira@csr.utexas.edu
   ;;
   dockerhub-user) #shows dockerhub usename
