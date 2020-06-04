@@ -33,7 +33,7 @@ Optional arguments  :
 display             : shows the plot (after writing the output file)
 interactive         : do not produce the output file but show it in x11
 -title=...          : set the title explicitly
--out=...            : name of plot file, defaults to first data file (.$(extension $TERMINAL) extension added automaticall)
+-out=...            : name of plot file, defaults to first data file (.$(extension $TERMINAL) extension added automaticall, if needed)
 -outdir=...         : save plot file to this dir (can also be specified in -out= but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in -out=)
 -filelabels=...     : label the data in the file(s) according to this comma-separated list
 quiet               : limit the user feedback
@@ -128,11 +128,6 @@ then
   echo "$HELPSTR"
   exit 3
 fi
-
-#if no -out= was given, make up something
-[ -z "$OUT" ] && OUT=${FILE_LIST[0]}
-[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
-
 
 if [ -z "$FILE_LABELS" ]
 then
