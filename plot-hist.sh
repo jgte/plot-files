@@ -88,11 +88,11 @@ function std(arr, sum2,c,i){
     }
   }
   for (i=0; i<l; i++) {
-    printf("%.3g\n",v[i]) 
+    if ( v[i]!=0) printf("%.3g\n",v[i]) 
   }
 }' | \
   sort -g > $DATA_FILE.tmp && \
-  mv -f $DATA_FILE.tmp $DATA_FILE
+  mv -f $DATA_FILE.tmp $DATA_FILE1
 fi
 
 #getting plot parameters
