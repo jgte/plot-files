@@ -13,6 +13,7 @@ fi
 
 DEBUG=false
 RM_OUTLIERS=false
+N_BINS=
 for i in "$@"
 do
   case $i in 
@@ -33,6 +34,9 @@ do
     ;;
     --rm-outliers)
       RM_OUTLIERS=true
+    ;;
+    --n-bins=*)
+      N_BINS=${i/--n-bins=}
     ;;
     help|-h)
       echo "\
@@ -95,7 +99,18 @@ fi
 min=`head -n1 $DATA_FILE`
 max=`tail -n1 $DATA_FILE`
 n=`cat $DATA_FILE | wc -l | sed 's: ::g'`
-n_bins=`echo "sqrt($n)" | bc`
+case "$N_BINS" in
+  ""|simple)
+    n_bins=`echo "sqrt($n)" | bc`
+  ;;
+  # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
+  Freedman-Diaconis|FD)
+    echo "ERROR: implementation needed"
+  ;;
+  *)
+    n_bins=$N_BINS
+  ;;
+esac
 title="data points=$n, sum=$(
 cat $DATA_FILE | awk '{ SUM += $1} END { printf("%g",SUM) }'
 )"
