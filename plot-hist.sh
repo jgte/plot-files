@@ -54,7 +54,7 @@ cat $DATA_FILE | \
 #remove outliers if asked
 if $RM_OUTLIERS
 then
-  awk '
+  cat $DATA_FILE | awk '
 function alen(arr, i,c) {
   c = 0
   for(i in arr) c++
@@ -84,9 +84,10 @@ function std(arr, sum2,c,i){
     }
   }
   for (i=0; i<l; i++) {
-    print v[i]
+    printf("%.3g\n",v[i]) 
   }
-}' $DATA_FILE > $DATA_FILE.tmp
+}' | \
+  sort -g > $DATA_FILE.tmp && \
   mv -f $DATA_FILE.tmp $DATA_FILE
 fi
 
@@ -140,5 +141,4 @@ set title "$title"
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
 %
 
-# gnome-open $PLOT_FILE
-rm -f $DATA_FILE
+$DEBUG || rm -f $DATA_FILE
