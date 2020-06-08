@@ -92,7 +92,7 @@ function std(arr, sum2,c,i){
   }
 }' | \
   sort -g > $DATA_FILE.tmp && \
-  mv -f $DATA_FILE.tmp $DATA_FILE1
+  mv -f $DATA_FILE.tmp $DATA_FILE
 fi
 
 #getting plot parameters
