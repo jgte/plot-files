@@ -209,7 +209,7 @@ then
 fi
 
 #determine xdata column
-XDATA=1
+XDATA=
 COL=0
 for i in ${LABELS[@]}
 do
@@ -228,8 +228,55 @@ do
   esac
 done
 
-#build gnuplot cmd
-PLOT_CMD=plot
+#sanity
+if [ -z "$XDATA" ]
+then
+  echo "ERROR: need one entry in the comma-separated list of columns in -labels=... to be 't'"
+  exit 3
+fi
+
+#init gnuplot formatting commands
+FMT_CMD=()
+
+#enfore logx/y if requested
+$LOGY && FMT_CMD+=(
+  "set logscale y 10"
+  "set format y \"%5.0e\""
+)
+$LOGX && FMT_CMD+=(
+  "set logscale x 10"
+)
+
+#by default, expect x data to be numeric values
+XDATA_CMD="(\$$XDATA)"
+#enforce date format if requested
+case $XTICKS in
+  d*)
+    FMT_CMD+=(
+      "set xdata time"
+      "set timefmt \"$XDATA_FORMAT\""
+      "set format x \"$PLOT_DATE_FORMAT\""
+    )
+    #do not use numeric convertion for x data (set by default above)
+    XDATA_CMD=$XDATA
+  ;;
+  f*) 
+    FMT_CMD+=("set format x \"%f\"")
+  ;;
+  i*) 
+    FMT_CMD+=("set format x \"%.0f\"")
+  ;;
+  s*) 
+    FMT_CMD+=("set format x \"%e\"")
+  ;;
+  *)
+    echo "ERROR: cannot handle value '$XTICKS' of argument -xticks="
+    exit 3
+  ;;
+esac
+
+#init gnuplot plot command
+PLOT_ARGS=()
 #file column index
 COL=0
 #plot line index (used for consistent coloring)
@@ -246,8 +293,8 @@ do
     for ((f=0;f<${#FILE_LIST[@]};f++))
     do
       #OFFSET and LEGEND were defined in previous iteration
-      PLOT_CMD+=" '${FILE_LIST[f]}' using (\$$XDATA):(\$$cp - $OFFSET - \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma',"
-      PLOT_CMD+=" '${FILE_LIST[f]}' using (\$$XDATA):(\$$cp - $OFFSET + \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma',"
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
     done
   ;;
   *)
@@ -264,45 +311,12 @@ do
         #append it to title
         LEGEND+=" $OFFSET"
       fi
-      PLOT_CMD+=" '${FILE_LIST[f]}' using (\$$XDATA):(\$$COL - $OFFSET) title '$LEGEND' with lp pt $((f+1)) ps $PS lw 2 lc $c,"	    
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with lp pt $((f+1)) ps $PS lw 2 lc $c")
     done
   ;;
   esac
 done
-PLOT_CMD=${PLOT_CMD%,*}
-
-#enfore logx/y if requested
-$LOGY && PLOT_CMD="set logscale y 10
-set format y \"%5.0e\"
-$PLOT_CMD"
-$LOGX && PLOT_CMD="set logscale x 10
-$PLOT_CMD"
-
-#enforce date format if requested
-case $XTICKS in
-  d*)
-    PLOT_CMD="set xdata time
-set timefmt \"$XDATA_FORMAT\"
-set format x \"$PLOT_DATE_FORMAT\"
-$PLOT_CMD"
-  ;;
-  f*) 
-    PLOT_CMD="set format x \"%f\"
-$PLOT_CMD"
-  ;;
-  i*) 
-    PLOT_CMD="set format x \"%.0f\"
-$PLOT_CMD"
-  ;;
-  s*) 
-    PLOT_CMD="set format x \"%e\"
-$PLOT_CMD"
-  ;;
-  *)
-    echo "ERROR: cannot handle value '$XTICKS' of argument -xticks="
-    exit 3
-  ;;
-esac
+PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}")"
 
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
@@ -322,6 +336,7 @@ set title \"$TITLE\"
 set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
+$(printf '%s\n' ${FMT_CMD[@]})
 $PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
@@ -348,6 +363,7 @@ set grid
 set title "$TITLE"
 set xlabel "$XLABEL"
 set ylabel "$YLABEL"
+$(printf '%s\n' "${FMT_CMD[@]}")
 $PLOT_CMD
 %
 
