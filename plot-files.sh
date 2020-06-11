@@ -40,7 +40,8 @@ interactive         : do not produce the output file but show it in x11
 quiet               : limit the user feedback
 force               : delete plot file (if existing), by default no replotting is done
 -xticks=...         : use special formating in the x-axis ticks: dates, float, integer, scientific (defaults to $XTICKS)
--date-format=...    : speficy the format of the dates in the x-axis (defaults to $XDATA_FORMAT)
+-date-format=...    : speficy the format of the dates in the data file(s) (defaults to $XDATA_FORMAT)
+-date-plot=...      : speficy the format of the dates in the x-axis (defaults to $PLOT_DATE_FORMAT)
 logy                : use log10 scale in the y-axis
 logx                : use log10 scale in the x-axis
 -start=...          : plot only from this line onwards
@@ -53,7 +54,7 @@ dyn-point-size      : increase marker size for each additional line
 -ylabel=...         : define y-axis label (defaults to none)
 demean              : remove the mean of all columns before plotting
 -terminal=...       : set the gnuplot terminal type (defaults to $TERMINAL)
--size=...           : set the terminal suze (defaults to $SIZE)
+-size=...           : set the terminal size (defaults to $SIZE)
 "
 
 DISPLAY_FLAG=false
@@ -195,6 +196,7 @@ then
   echo "file labels : ${FILE_LABELS[@]}"
   echo "xticks      : $XTICKS"
   echo "date-format : $XDATA_FORMAT"
+  echo "date-plot   : $PLOT_DATE_FORMAT"
   echo "logy        : $LOGY"
   echo "logx        : $LOGX"
   echo "font        : $FONT"
@@ -280,6 +282,7 @@ case $XTICKS in
   d*)
     PLOT_CMD="set xdata time
 set timefmt \"$XDATA_FORMAT\"
+set format x \"$PLOT_DATE_FORMAT\"
 $PLOT_CMD"
   ;;
   f*) 
