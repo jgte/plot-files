@@ -339,7 +339,7 @@ do
   ;;
   esac
 done
-PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}")"
+PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}");"
 
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
@@ -348,7 +348,7 @@ POST_FMT_CMD=()
 if [ ! -z "$YRANGE" ]
 then
   POST_FMT_CMD+=(
-    "set yrange [$YRANGE]"
+    "set yrange [$YRANGE];"
     "replot"
   )
 fi
