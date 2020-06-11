@@ -13,6 +13,7 @@ function extension()
 #parameters
 FONT="arial,16"
 XDATA_FORMAT="%Y-%m-%d"
+PLOT_DATE_FORMAT="%Y-%m-%d"
 POINTSIZE=0.5
 MAX_POINTSIZE=2
 XTICKS="float"
