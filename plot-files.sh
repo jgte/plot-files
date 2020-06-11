@@ -288,11 +288,6 @@ case $XTICKS in
   ;;
 esac
 
-if [ ! -z "$YRANGE" ]
-then
-  FMT_CMD+=("set yrange [$YRANGE]")
-fi
-
 #user feedback
 $DEBUG && echo -e "format  cmd :\n$(printf "%s\n" "${FMT_CMD[@]}")"
 
@@ -349,6 +344,20 @@ PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}")"
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
 
+POST_FMT_CMD=()
+if [ ! -z "$YRANGE" ]
+then
+  POST_FMT_CMD+=(
+    "set yrange [$YRANGE]"
+    "replot"
+  )
+fi
+
+#user feedback
+$DEBUG && echo -e "post fmt cmd:\n$(printf "%s\n" "${POST_FMT_CMD[@]}")"
+
+
+
 if $INTERACTIVE
 then
 # https://superuser.com/questions/1096831/start-an-interactive-session-in-gnuplot-and-execute-some-commands-when-it-opens
@@ -364,8 +373,9 @@ set title \"$TITLE\"
 set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
-$(printf '%s\n' ${FMT_CMD[@]})
-$PLOT_CMD"
+$(printf '%s\n' "${FMT_CMD[@]}")
+$PLOT_CMD
+$(printf '%s\n' "${POST_FMT_CMD[@]}")"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
   while true; do
@@ -393,6 +403,7 @@ set xlabel "$XLABEL"
 set ylabel "$YLABEL"
 $(printf '%s\n' "${FMT_CMD[@]}")
 $PLOT_CMD
+$(printf '%s\n' "${POST_FMT_CMD[@]}")
 %
 
 $DISPLAY_FLAG && display "$OUT" || echo "plotted $OUT"
