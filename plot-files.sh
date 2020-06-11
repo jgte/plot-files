@@ -339,7 +339,7 @@ do
   ;;
   esac
 done
-PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}");"
+PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}")"
 
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
@@ -348,8 +348,7 @@ POST_FMT_CMD=()
 if [ ! -z "$YRANGE" ]
 then
   POST_FMT_CMD+=(
-    "set yrange [$YRANGE];"
-    "replot"
+    "set yrange [$YRANGE]"
   )
 fi
 
@@ -374,8 +373,8 @@ set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
 $(printf '%s\n' "${FMT_CMD[@]}")
-$PLOT_CMD
-$(printf '%s\n' "${POST_FMT_CMD[@]}")"
+$(printf '%s\n' "${POST_FMT_CMD[@]}")
+$PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
   while true; do
@@ -402,8 +401,8 @@ set title "$TITLE"
 set xlabel "$XLABEL"
 set ylabel "$YLABEL"
 $(printf '%s\n' "${FMT_CMD[@]}")
-$PLOT_CMD
 $(printf '%s\n' "${POST_FMT_CMD[@]}")
+$PLOT_CMD
 %
 
 $DISPLAY_FLAG && display "$OUT" || echo "plotted $OUT"
