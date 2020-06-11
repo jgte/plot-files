@@ -211,6 +211,7 @@ fi
 #determine xdata column
 XDATA=
 COL=0
+NR_COL=0
 for i in ${LABELS[@]}
 do
   COL=$((COL+1))
@@ -223,6 +224,7 @@ do
     $DEBUG && echo "ignoring data in column $COL"
   ;;
   *)
+    NR_COL=$((NR_COL+1))
     $QUIET || echo "plotting data in column $COL"
   ;;
   esac
@@ -289,16 +291,21 @@ do
     #do nothing
   ;;
   err)
+    #reset file-wise color if there's only one data column
+    [ $NR_COL -eq 1 ] && c=1
     cp=$((COL-1))
     for ((f=0;f<${#FILE_LIST[@]};f++))
     do
       #OFFSET and LEGEND were defined in previous iteration
       PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
       PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
+      #increment file-wise color if there's only one column
+      [ $NR_COL -eq 1 ] && c=$((c+1))
     done
   ;;
   *)
-    c=$((c+1))
+    #reset file-wise color if there's only one data column
+    [ $NR_COL -eq 1 ] && c=1 || c=$((c+1))
     for ((f=0;f<${#FILE_LIST[@]};f++))
     do
       $DYNPS && PS=$(echo "scale=1;($N-$i)/$N*($MAX_POINTSIZE-$POINTSIZE)+$POINTSIZE"|bc) || PS=$POINTSIZE
@@ -312,6 +319,8 @@ do
         LEGEND+=" $OFFSET"
       fi
       PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with lp pt $((f+1)) ps $PS lw 2 lc $c")
+      #increment file-wise color if there's only one column
+      [ $NR_COL -eq 1 ] && c=$((c+1))
     done
   ;;
   esac
