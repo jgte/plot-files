@@ -92,6 +92,7 @@ do
   force)          FORCE=true           ;;
   -xticks=*)      XTICKS=${i/-xticks=} ;;
   -date-format=*) XDATA_FORMAT=${i/-date-format=} ;;
+  -date-plot=*)   PLOT_DATE_FORMAT=${i/-date-plot=} ;;
   logy)           LOGY=true            ;;
   logx)           LOGX=true            ;;
   -start=*)       START=${i/-start=}   ;;
