@@ -293,6 +293,9 @@ then
   FMT_CMD+=("set yrange [$YRANGE]")
 fi
 
+#user feedback
+$DEBUG && echo -e "format  cmd :\n$(printf "%s\n" "${FMT_CMD[@]}")"
+
 #init gnuplot plot command
 PLOT_ARGS=()
 #file column index
