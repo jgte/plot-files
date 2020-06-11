@@ -55,6 +55,7 @@ dyn-point-size      : increase marker size for each additional line
 demean              : remove the mean of all columns before plotting
 -terminal=...       : set the gnuplot terminal type (defaults to $TERMINAL)
 -size=...           : set the terminal size (defaults to $SIZE)
+-yrange=ymin:ymax   : sets the limit of the y-axis range (defaults set whatever is set by gnuplot)
 "
 
 DISPLAY_FLAG=false
@@ -77,6 +78,7 @@ FORCE=false
 XLABEL=
 YLABEL=
 DEMEAN=false
+YRANGE=
 for i in "$@"
 do
   case $i in 
@@ -106,6 +108,14 @@ do
   demean)         DEMEAN=true          ;;
   -terminal=*)    TERMINAL=${i/-terminal=} ;;
   -size=*)        SIZE=${i/-size=}     ;;
+  -yrange=*)
+    YRANGE=${i/-yrange=}
+    if [[ "${YRANGE/:}" == "$YRANGE" ]]
+    then
+      echo "ERROR: input -yrange=... must contain the character ':' separating the min and max values of the y-axis range."
+      exit 3
+    fi
+  ;;
   -h|help)        echo "$HELPSTR"; exit 0;;
   *)
     if [ -e $i ]
@@ -206,6 +216,7 @@ then
   echo "demean      : $DEMEAN"
   echo "terminal    : $TERMINAL"
   echo "size        : $SIZE"
+  echo "yrange      : $YRANGE"
 fi
 
 #determine xdata column
@@ -276,6 +287,11 @@ case $XTICKS in
     exit 3
   ;;
 esac
+
+if [ ! -z "$YRANGE" ]
+then
+  FMT_CMD+=("set yrange [$YRANGE]")
+fi
 
 #init gnuplot plot command
 PLOT_ARGS=()
