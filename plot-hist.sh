@@ -188,6 +188,7 @@ $($LOGY && echo "set logscale y")
 set title "$title" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
+$($LOGY && echo "set yrange [1:]" || echo "set yrange [0:]")
 %
 
 $DEBUG || rm -f $DATA_FILE
