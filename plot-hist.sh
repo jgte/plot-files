@@ -4,50 +4,83 @@
 PLOT_FILE=plot-hist.png
 DATA_FILE=/tmp/plot-hist.$RANDOM.data
 
-if [ $# -lt 1 ]
-then
-  $BASH_SOURCE help
-  echo "ERROR:Need at least one input argument."
-  exit 3
-fi
-
 DEBUG=false
 RM_OUTLIERS=false
 N_BINS=
+XLABEL=
+LOGY=false
+BOXWIDTH=1
+iC=0
 for i in "$@"
 do
+  iC=$(( iC+1 ))
   case $i in 
-    -x) set -x;;
-    -f=*) cp ${i/-f=} $DATA_FILE ;;
-    -o=*) PLOT_FILE=${i/-o=} ;;
-    --debug) DEBUG=true ;;
-    -d)
+    -f=*) #define the file with the data
+      cp ${i/-f=} $DATA_FILE 
+    ;;
+    -d) #define the histogram data as blank-separated list of values and all arguments after this one are assumed to be the histogram values
       shift
-      for j in $@
+      for j in ${@:$iC}
       do
         echo "$j"
       done | sort -g > $DATA_FILE
       break
     ;;
-    -d=*)
+    -d=*) #define the histogram data as a comma-separated list of values, with no blanks
       printf "%s\n" ${i//,/ } | sort -g > $DATA_FILE
     ;;
-    --rm-outliers)
+    modes) #shows all available modes and exit
+      grep ') #' $BASH_SOURCE \
+        | grep -v grep \
+        | sed 's:)::g' \
+        | column -t -s\#
+      exit
+    ;;
+    -x) #set -x bash option
+      set -x
+    ;;
+    -o=*) #define the name of the histogram plot file
+      PLOT_FILE=${i/-o=} 
+    ;;
+    --debug|debug) #show some debug output
+      DEBUG=true 
+    ;;
+    --rm-outliers) #remove outliers before plotting
       RM_OUTLIERS=true
     ;;
-    --n-bins=*)
+    --n-bins=*) #specify the number of bins
       N_BINS=${i/--n-bins=}
     ;;
-    help|-h)
+    --x-label=*) #specify the x-axis label
+      XLABEL=${i/--x-label=}
+    ;;
+    --log-y) #use logarithmic scale in the y-axis 
+      LOGY=true
+    ;;
+    --box-width=*) #define the width factor of the histogram bars, 1 means the bars have no gaps between them
+      BOXWIDTH=${i/--box-width=}
+    ;; 
+    help|-h) #show the help string and exit
       echo "\
-Plot the histogram of a set of value. Usage:
+Plot the histogram of a set of values. Usage:
 
-$BASH_SOURCE -f=<data file> [ -o=<plot filename (defaults to '$PLOT_FILE') ]>
-$BASH_SOURCE -d=<value 1>,<value 2>,...,<value N> [ -o=<plot filename (defaults to '$PLOT_FILE') ]
-$BASH_SOURCE -d <value 1> <value 2> ... <value N>"
+$BASH_SOURCE -f=<data file> [ <options> ]>
+$BASH_SOURCE -d=<value 1>,<value 2>,...,<value N> [ <options> ]
+$BASH_SOURCE [ <options> ] -d <value 1> <value 2> ... <value N>
+
+All options:"
+      $BASH_SOURCE modes
+      exit 
     ;;
   esac
 done
+
+if [ ! -e $DATA_FILE ]
+then
+  echo -e "ERROR: need one of -f= or -d= or -d input arguments:\n"
+  $BASH_SOURCE help
+  exit
+fi
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
@@ -145,12 +178,13 @@ set yrange [0:]
 #data inside an autoscaled graph.
 # set offset graph 0.05,0.05,0.05,0.0
 # set xtics min,(max-min)/5,max
-set boxwidth width*0.9
+set boxwidth width*$BOXWIDTH
 set style fill solid 0.5	#fillstyle
 set format x "%.2g"
 set tics out nomirror
-# set xlabel "x"
+$([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
+$($LOGY && echo "set logscale y")
 set title "$title" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
