@@ -172,8 +172,8 @@ width=(max-min)/n_bins	#interval width
 hist(x,width)=width*(floor(x/width)+0.5)
 set term png	#output terminal and file
 set output "$PLOT_FILE"
-set xrange [min-(max-min)*0.05:max+(max-min)*0.05]
-set yrange [0:]
+# set xrange [min-(max-min)*0.05:max+(max-min)*0.05]
+$($LOGY && echo "set yrange [0.0000001:]" || echo "set yrange [0:]")
 #to put an empty boundary around the
 #data inside an autoscaled graph.
 # set offset graph 0.05,0.05,0.05,0.0
