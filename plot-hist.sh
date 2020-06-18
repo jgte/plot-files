@@ -16,7 +16,7 @@ do
   iC=$(( iC+1 ))
   case $i in 
     -f=*) #define the file with the data
-      cp ${i/-f=} $DATA_FILE 
+      cat ${i/-f=} | sort -g > $DATA_FILE 
     ;;
     -d) #define the histogram data as blank-separated list of values and all arguments after this one are assumed to be the histogram values
       shift
