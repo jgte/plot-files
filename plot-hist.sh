@@ -173,7 +173,7 @@ hist(x,width)=width*(floor(x/width)+0.5)
 set term png	#output terminal and file
 set output "$PLOT_FILE"
 # set xrange [min-(max-min)*0.05:max+(max-min)*0.05]
-$($LOGY && echo "set yrange [1:]" || echo "set yrange [0:]")
+$($LOGY && echo "set yrange [0.1:]" || echo "set yrange [0:]")
 #to put an empty boundary around the
 #data inside an autoscaled graph.
 # set offset graph 0.05,0.05,0.05,0.0
@@ -188,7 +188,6 @@ $($LOGY && echo "set logscale y")
 set title "$title" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
-$($LOGY && echo "set yrange [1:]" || echo "set yrange [0:]")
 %
 
 $DEBUG || rm -f $DATA_FILE
