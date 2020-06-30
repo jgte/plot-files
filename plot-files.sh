@@ -228,6 +228,9 @@ fi
 #if an outdir was given, prepend it to basename of out
 [ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
 
+#enforce force
+$FORCE && rm -f $OUT
+
 if ! $QUIET
 then
   echo "Plotting the following files:"
@@ -239,7 +242,7 @@ then
   echo "out         : $OUT"
   echo "out dir     : $OUTDIR"
   echo "extension   : $EXT"
-  echo "file labels : ${FILE_LABELS[@]}"
+  echo "file labels : ${FILE_LABELS[@]:-}"
   echo "xticks      : $XTICKS"
   echo "date-format : $XDATA_FORMAT"
   echo "date-plot   : $PLOT_DATE_FORMAT"
@@ -324,7 +327,7 @@ case $XTICKS in
 esac
 
 #user feedback
-$DEBUG && echo -e "format  cmd :\n$(printf "%s\n" "${FMT_CMD[@]}")"
+$DEBUG && echo -e "format  cmd :\n$(printf "%s\n" "${FMT_CMD[@]:-}")"
 
 #init gnuplot plot command
 PLOT_ARGS=()
@@ -374,7 +377,7 @@ do
   ;;
   esac
 done
-PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]}")"
+PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
 
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
@@ -388,7 +391,7 @@ then
 fi
 
 #user feedback
-$DEBUG && echo -e "post fmt cmd:\n$(printf "%s\n" "${POST_FMT_CMD[@]}")"
+$DEBUG && echo -e "post fmt cmd:\n$(printf "%s\n" "${POST_FMT_CMD[@]:-}")"
 
 
 
@@ -407,8 +410,8 @@ set title \"$TITLE\"
 set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
-$(printf '%s\n' "${FMT_CMD[@]}")
-$(printf '%s\n' "${POST_FMT_CMD[@]}")
+$(printf '%s\n' "${FMT_CMD[@]:-}")
+$(printf '%s\n' "${POST_FMT_CMD[@]:-}")
 $PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
@@ -435,8 +438,8 @@ set grid
 set title "$TITLE"
 set xlabel "$XLABEL"
 set ylabel "$YLABEL"
-$(printf '%s\n' "${FMT_CMD[@]}")
-$(printf '%s\n' "${POST_FMT_CMD[@]}")
+$(printf '%s\n' "${FMT_CMD[@]:-}")
+$(printf '%s\n' "${POST_FMT_CMD[@]:-}")
 $PLOT_CMD
 %
 
