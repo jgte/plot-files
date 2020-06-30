@@ -5,6 +5,7 @@ APPDIR=$($DIR/dockerize.sh app-dir)
 IODIR=$($DIR/dockerize.sh io-dir)
 
 case "$1" in
+
   sh) #run the shell instead of plot-files.sh
     exec /bin/bash -i
   ;;
@@ -15,7 +16,7 @@ case "$1" in
       | column -t -s\#
   ;;
   apps) #slows all avalable apps
-    exec for i in $(ls $APPDIR/plot-*); do basename $i; done
+    for i in $(ls $APPDIR/plot-*); do basename $i; done
   ;;
   test-*) #tests an app (some may not yet have a test)
     exec $APPDIR/test/$1 -outdir=$IODIR
