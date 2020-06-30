@@ -56,6 +56,9 @@ RUN apk add --no-cache --update \
   image|tag) #shows the image tag
     echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
   ;;
+  url) #shows the docker image URL
+    echo docker://$($BASH_SOURCE image)
+  ;;
   dockerfile) #show the dockerfile
   echo "\
 FROM $($BASH_SOURCE gnuplot-image)

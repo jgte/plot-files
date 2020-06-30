@@ -36,7 +36,7 @@ app-name is one of:
 $($BASH_SOURCE apps)
 "
   ;;
-  *) #transparently pass all other arguments to ./plot-files.sh
-    exec $APPDIR/$i "$@" --outdir $IODIR
+  *) #transparently pass all other arguments to the app
+    exec $APPDIR/$@
   ;;
 esac
