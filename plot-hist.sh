@@ -3,7 +3,7 @@
 
 PLOT_FILE=plot-hist.png
 DATA_FILE=/tmp/plot-hist.$RANDOM.data
-
+OUTDIR=
 DEBUG=false
 RM_OUTLIERS=false
 N_BINS=
@@ -39,8 +39,11 @@ do
     -x) #set -x bash option
       set -x
     ;;
-    -o=*) #define the name of the histogram plot file
-      PLOT_FILE=${i/-o=} 
+    -out=*) #define the name and path of the histogram plot file
+      PLOT_FILE=${i/-out=} 
+    ;;
+    -outdir=*) #define the path of the histogram plot file, overwrites the path in -out=
+      OUTDIR=${i/-outdir=}
     ;;
     --debug|debug) #show some debug output
       DEBUG=true 
@@ -74,6 +77,8 @@ All options:"
     ;;
   esac
 done
+#if an outdir was given, prepend it to basename of out
+[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $PLOT_FILE)
 
 if [ ! -e $DATA_FILE ]
 then
