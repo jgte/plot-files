@@ -19,7 +19,6 @@ RM_OUTLIERS=false
 N_BINS=
 XLABEL=
 LOGY=false
-LOGX=false
 BOXWIDTH=1
 TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
@@ -70,9 +69,6 @@ do
     ;;
     --logy|-l) #use logarithmic scale in the y-axis 
       LOGY=true
-    ;;
-    --logx) #use logarithmic scale in the x-axis and show absolute value of data
-      LOGX=true
     ;;
     --box-width) #define the width factor of the histogram bars, 1 means the bars have no gaps between them
       shift; BOXWIDTH="$1"
@@ -173,19 +169,6 @@ function std(arr, sum2,c,i){
   mv -f $DATA_FILE.tmp $DATA_FILE
 fi
 
-if $LOGX
-then
-  cat $DATA_FILE | awk '
-function abs(x){
-  return ((x < 0.0) ? -x : x)
-} 
-{
-  print abs($1)
-}'| \
-  sort -g > $DATA_FILE.tmp && \
-  mv -f $DATA_FILE.tmp $DATA_FILE
-fi
-
 #getting plot parameters
 min=`head -n1 $DATA_FILE`
 max=`tail -n1 $DATA_FILE`
@@ -250,7 +233,6 @@ set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
 $($LOGY && echo "set logscale y")
-$($LOGX && echo -e "set xrange [0:]\nset logscale x")
 set title "$TITLE" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
