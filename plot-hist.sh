@@ -105,6 +105,9 @@ All options:"
       $BASH_SOURCE --arguments
       exit 
     ;;
+    *)
+      echo "WARNING: ignoring argument '$1'"
+    ;;
   esac
   shift
 done
