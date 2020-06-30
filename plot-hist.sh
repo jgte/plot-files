@@ -17,6 +17,7 @@ OUTDIR=
 DEBUG=false
 RM_OUTLIERS=false
 N_BINS=
+FORCE=false
 XLABEL=
 LOGY=false
 BOXWIDTH=1
@@ -57,6 +58,9 @@ do
     ;;
     --debug|-D) #show some debug output
       DEBUG=true 
+    ;;
+    --force) #delete plot file, if existing; by default no replotting is done
+      FORCE=true           
     ;;
     --rm-outliers) #remove outliers before plotting
       RM_OUTLIERS=true
@@ -112,6 +116,13 @@ All options:"
   shift
 done
 
+if [ ! -e $DATA_FILE ]
+then
+  echo -e "ERROR: need one of --files, --bsv-data or --csv-data:\n"
+  $BASH_SOURCE --help
+  exit
+fi
+
 #retrieve expected extension
 EXT=$(extension $TERMINAL)
 #out was given, add extension (if needed)
@@ -119,12 +130,8 @@ OUT=${OUT%\.$EXT}.$EXT
 #if an outdir was given, prepend it to basename of out
 [ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
 
-if [ ! -e $DATA_FILE ]
-then
-  echo -e "ERROR: need one of --files, --bsv-data or --csv-data:\n"
-  $BASH_SOURCE --help
-  exit
-fi
+#enforce force
+$FORCE && rm -f $OUT
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
