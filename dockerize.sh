@@ -43,6 +43,7 @@ RUN apk add --no-cache --update \
     git \
     bash \
     util-linux \
+    bc \
     gnuplot \
     fontconfig \
     ttf-ubuntu-font-family \

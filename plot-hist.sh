@@ -185,7 +185,7 @@ case "$N_BINS" in
     n_bins=$N_BINS
   ;;
 esac
-[ -z "$TITLE"] && TITLE="data points=$n, sum=$(
+[ -z "$TITLE" ] && TITLE="data points=$n, sum=$(
 cat $DATA_FILE | awk '{ SUM += $1} END { printf("%g",SUM) }'
 )"
 
