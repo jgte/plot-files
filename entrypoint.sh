@@ -30,10 +30,10 @@ Possible arguments:
 - app-name app-args
 
 mode is one of:
-$(BASH_SOURCE modes)
+$($BASH_SOURCE modes)
 
 app-name is one of:
-$(BASH_SOURCE apps)
+$($BASH_SOURCE apps)
 "
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
