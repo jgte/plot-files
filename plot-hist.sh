@@ -19,6 +19,7 @@ RM_OUTLIERS=false
 N_BINS=
 XLABEL=
 LOGY=false
+LOGX=false
 BOXWIDTH=1
 TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
