@@ -250,7 +250,7 @@ set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
 $($LOGY && echo "set logscale y")
-$($LOGX && echo -n "set xrange [0:]\nset logscale x")
+$($LOGX && echo -e "set xrange [0:]\nset logscale x")
 set title "$TITLE" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
