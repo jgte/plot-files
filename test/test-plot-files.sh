@@ -12,6 +12,6 @@ $(dirname $DIR)/plot-files.sh \
   --force \
   --point-size 0 \
   --xticks integer \
-  --xlabel "seconds of day" \
-  --ylabel="[m/s^2]" \
+  --x-label "seconds of day" \
+  --y-label "[m/s^2]" \
   $@
