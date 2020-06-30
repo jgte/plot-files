@@ -37,6 +37,6 @@ $($BASH_SOURCE apps)
 "
   ;;
   *) #transparently pass all other arguments to ./plot-files.sh
-    exec $APPDIR/$i "$@" -outdir=$IODIR
+    exec $APPDIR/$i "$@" --outdir $IODIR
   ;;
 esac

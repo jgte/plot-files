@@ -42,7 +42,10 @@ DEMEAN=false
 YRANGE=
 while [[ $# -gt 0 ]]
 do
-  case "$1" in 
+  case "$1" in
+  -x) #set -x bash option
+    set -x
+  ;;
   --files|-f) 
     shift; FILE_LIST=("${1//,/ }")
   ;;
@@ -190,7 +193,6 @@ then
     FILE_LABELS+=(' ')
   fi
 fi
-
 
 # https://serverfault.com/questions/133692/how-to-display-certain-lines-from-a-text-file-in-linux
 # middle() { local s=$1; local COL=$2; shift 2; sed -n "$s,$(( s+COL-1 ))p; $(( s+COL ))q" "$@"; }

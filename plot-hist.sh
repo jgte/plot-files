@@ -1,8 +1,18 @@
 #!/bin/bash -u
 
+function extension()
+{
+  local OUT="$1"
+  for i in cairo latex
+  do
+    [ "$1" == "$i" ] || OUT=${OUT/$i}
+  done
+  echo "$OUT"
+}
 
-PLOT_FILE=plot-hist.png
 DATA_FILE=/tmp/plot-hist.$RANDOM.data
+TITLE=
+OUT=plot-hist.png
 OUTDIR=
 DEBUG=false
 RM_OUTLIERS=false
@@ -10,15 +20,22 @@ N_BINS=
 XLABEL=
 LOGY=false
 BOXWIDTH=1
+TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
+SIZE="1200,900"
+FONT="arial,16"
+
 iC=0
-for i in "$@"
+while [[ $# -gt 0 ]]
 do
   iC=$(( iC+1 ))
-  case $i in 
-    -f=*) #define the file with the data
-      cat ${i/-f=} | sort -g > $DATA_FILE 
+  case "$1" in 
+    -x) #set -x bash option
+      set -x
     ;;
-    -d) #define the histogram data as blank-separated list of values and all arguments after this one are assumed to be the histogram values
+    --files|-f) #define the file with the data
+      shift; cat "$1" | sort -g > $DATA_FILE 
+    ;;
+    --bsv-data) #define the histogram data as list of blank-separated values (bsv) and all arguments after this one are assumed to be the histogram values
       shift
       for j in ${@:$iC}
       do
@@ -26,64 +43,83 @@ do
       done | sort -g > $DATA_FILE
       break
     ;;
-    -d=*) #define the histogram data as a comma-separated list of values, with no blanks
-      printf "%s\n" ${i//,/ } | sort -g > $DATA_FILE
+    --csv-data) #define the histogram data as a list of comma-separated values (csv), with no blanks
+      shift; printf "%s\n" "${1//,/ }" | sort -g > $DATA_FILE
     ;;
-    modes) #shows all available modes and exit
+    --title|-T) #set the title explicitly
+      shift; TITLE="$1"
+    ;;
+    --out|-o) #define the name and path of the histogram plot file
+      shift; OUT="$1"
+    ;;
+    --outdir) #define the path of the histogram plot file, overwrites the path in -out=
+      shift; OUTDIR="$1"
+    ;;
+    --debug|-D) #show some debug output
+      DEBUG=true 
+    ;;
+    --rm-outliers) #remove outliers before plotting
+      RM_OUTLIERS=true
+    ;;
+    --n-bins) #specify the number of bins
+      shift; N_BINS="$1"
+    ;;
+    --x-label|-X) #specify the x-axis label
+      shift; XLABEL="$1"
+    ;;
+    --logy|-l) #use logarithmic scale in the y-axis 
+      LOGY=true
+    ;;
+    --box-width) #define the width factor of the histogram bars, 1 means the bars have no gaps between them
+      shift; BOXWIDTH="$1"
+    ;; 
+    --terminal) #set the gnuplot terminal type, defaults to pngcairo
+      shift; TERMINAL="$1"
+    ;;
+    --size) #set the terminal size, defaults to 1200,900
+      shift; SIZE="$1"
+    ;;
+    --font) #font type and size, defaults to 'arial,16'
+      shift; FONT="$1"
+    ;;
+    --arguments) #shows all available modes and exit
       grep ') #' $BASH_SOURCE \
         | grep -v grep \
         | sed 's:)::g' \
         | column -t -s\#
       exit
     ;;
-    -x) #set -x bash option
-      set -x
-    ;;
-    -out=*) #define the name and path of the histogram plot file
-      PLOT_FILE=${i/-out=} 
-    ;;
-    -outdir=*) #define the path of the histogram plot file, overwrites the path in -out=
-      OUTDIR=${i/-outdir=}
-    ;;
-    --debug|debug) #show some debug output
-      DEBUG=true 
-    ;;
-    --rm-outliers) #remove outliers before plotting
-      RM_OUTLIERS=true
-    ;;
-    --n-bins=*) #specify the number of bins
-      N_BINS=${i/--n-bins=}
-    ;;
-    --x-label=*) #specify the x-axis label
-      XLABEL=${i/--x-label=}
-    ;;
-    --log-y) #use logarithmic scale in the y-axis 
-      LOGY=true
-    ;;
-    --box-width=*) #define the width factor of the histogram bars, 1 means the bars have no gaps between them
-      BOXWIDTH=${i/--box-width=}
-    ;; 
-    help|-h) #show the help string and exit
+    --help|-h) #show the help string and exit
       echo "\
 Plot the histogram of a set of values. Usage:
 
-$BASH_SOURCE -f=<data file> [ <options> ]>
-$BASH_SOURCE -d=<value 1>,<value 2>,...,<value N> [ <options> ]
-$BASH_SOURCE [ <options> ] -d <value 1> <value 2> ... <value N>
+$BASH_SOURCE -f <data file> [ <options> ]
+$BASH_SOURCE --csv-data <value 1>,<value 2>,...,<value N> [ <options> ]
+$BASH_SOURCE [ <options> ] --bsv-data <value 1> <value 2> ... <value N>
+
+Note that the <data file> should only contain one column of data. For files with multiple columns, bash provides good solutions, e.g. to plot the third column of data.file:
+
+$BASH_SOURCE -f <(awk '{print \$3}' data.file) [ <options> ]
 
 All options:"
-      $BASH_SOURCE modes
+      $BASH_SOURCE --arguments
       exit 
     ;;
   esac
+  shift
 done
+
+#retrieve expected extension
+EXT=$(extension $TERMINAL)
+#out was given, add extension (if needed)
+OUT=${OUT%\.$EXT}.$EXT
 #if an outdir was given, prepend it to basename of out
-[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $PLOT_FILE)
+[ -z "$OUTDIR" ] || OUT=$OUTDIR/$(basename $OUT)
 
 if [ ! -e $DATA_FILE ]
 then
-  echo -e "ERROR: need one of -f= or -d= or -d input arguments:\n"
-  $BASH_SOURCE help
+  echo -e "ERROR: need one of --files, --bsv-data or --csv-data:\n"
+  $BASH_SOURCE --help
   exit
 fi
 
@@ -149,18 +185,29 @@ case "$N_BINS" in
     n_bins=$N_BINS
   ;;
 esac
-title="data points=$n, sum=$(
+[ -z "$TITLE"] && TITLE="data points=$n, sum=$(
 cat $DATA_FILE | awk '{ SUM += $1} END { printf("%g",SUM) }'
 )"
 
 $DEBUG && echo "\
-data   : $DATA_FILE
-plot   : $PLOT_FILE
+Input arguments:
+files       : $DATA_FILE
+title       : $TITLE
+out         : $OUT
+outdir      : $OUTDIR
+rm-outliers : $($RM_OUTLIERS && echo true || echo false)
+n-bins      : $n_bins
+x-label     : $XLABEL
+logy        : $($LOGY && echo true || echo false)
+box-width   : $BOXWIDTH
+terminal    : $TERMINAL
+size        : $SIZE
+font        : $FONT
+
+Some internal parameters:
 min    : $min
 max    : $max
 n      : $n
-n_bins : $n_bins
-title  : '$title'
 w/bin  : $(echo "$max $min $n_bins" | awk '{print ($1-$2)/$3}')
 x_min  : $(echo "$max $min" | awk '{print $2-($1-$2)*0.05}')
 x_max  : $(echo "$max $min" | awk '{print $1-($1-$2)*0.05}')
@@ -175,8 +222,8 @@ min=$min	#min value
 width=(max-min)/n_bins	#interval width
 #function used to map a value to the intervals
 hist(x,width)=width*(floor(x/width)+0.5)
-set term png	#output terminal and file
-set output "$PLOT_FILE"
+set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL" ]] && echo enhanced)
+set output "$OUT"
 # set xrange [min-(max-min)*0.05:max+(max-min)*0.05]
 set yrange [0:]
 #to put an empty boundary around the
@@ -190,9 +237,11 @@ set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
 $($LOGY && echo "set logscale y")
-set title "$title" 
+set title "$TITLE" 
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
 %
+
+echo "plotted $OUT"
 
 $DEBUG || rm -f $DATA_FILE
