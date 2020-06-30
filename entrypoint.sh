@@ -18,7 +18,7 @@ case "$1" in
     for i in $(ls $APPDIR/plot-*); do basename $i; done
   ;;
   test-*) #tests an app; some may not yet have a test
-    exec $APPDIR/test/$1 -outdir=$IODIR
+    echo  $APPDIR/test/$1 -outdir=$IODIR
   ;;
   example-*) #shows the test script of an app
     exec cat $APPDIR/test/test-${1/example-}

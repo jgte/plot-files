@@ -119,7 +119,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   run) #spins up a new container and passes all aditional arguments to it
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
-    docker run --rm --volume=$PWD:$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
+    echo docker run --rm --volume=$PWD:$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
   s-image) #return the name of the singularity image file
