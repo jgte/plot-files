@@ -109,7 +109,7 @@ if __name__ == '__main__':
     help='figure height in inches') 
   parser.add_argument('-W','--width', nargs=1, type=float, required=False, default=[18], \
     help='figure width in inches') 
-  parser.add_argument('-l','--log', required=False, action='store_true', \
+  parser.add_argument('-l','--logy', required=False, action='store_true', \
     help='use logarithmic y-axis and plot absolute values') 
   parser.add_argument('-T','--title', nargs=1, type=str, required=False, default='', \
     help='add this string as plot title') 

@@ -19,45 +19,6 @@ MAX_POINTSIZE=2
 XTICKS="float"
 TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
-
-HELPSTR="
-Plots one or more column data files.
-
-Mandatory arguments:
-<data file1> [<data file2>] : files with data in column-wise format 
--labels=[t,][-,]column1label[,column2label[,...]], with meaning:
-  t            : abcissa (can handle dates in common formats)
-  -            : ignore this column
-  columnXlabel : label to give to the column in this data
-
-Optional arguments  :
-display             : shows the plot (after writing the output file)
-interactive         : do not produce the output file but show it in x11
--title=...          : set the title explicitly
--out=...            : name of plot file, defaults to first data file (.$(extension $TERMINAL) extension added automaticall, if needed)
--outdir=...         : save plot file to this dir (can also be specified in -out= but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in -out=)
--filelabels=...     : label the data in the file(s) according to this comma-separated list
-quiet               : limit the user feedback
-force               : delete plot file (if existing), by default no replotting is done
--xticks=...         : use special formating in the x-axis ticks: dates, float, integer, scientific (defaults to $XTICKS)
--date-format=...    : speficy the format of the dates in the data file(s) (defaults to $XDATA_FORMAT)
--date-plot=...      : speficy the format of the dates in the x-axis (defaults to $PLOT_DATE_FORMAT)
-logy                : use log10 scale in the y-axis
-logx                : use log10 scale in the x-axis
--start=...          : plot only from this line onwards
--len=...            : plot only this number of lines
--point-size=...     : marker size (defaults to $POINTSIZE)
-dyn-point-size      : increase marker size for each additional line
--max-point-size=... : maximum size of markers when dyn-point-size (defaults to $MAX_POINTSIZE)
--font=...           : font type and size (defaults to $FONT)
--xlabel=...         : define x-axis label (defaults to none)
--ylabel=...         : define y-axis label (defaults to none)
-demean              : remove the mean of all columns before plotting
--terminal=...       : set the gnuplot terminal type (defaults to $TERMINAL)
--size=...           : set the terminal size (defaults to $SIZE)
--yrange=ymin:ymax   : sets the limit of the y-axis range (defaults set whatever is set by gnuplot)
-"
-
 DISPLAY_FLAG=false
 INTERACTIVE=false
 FILE_LIST=()
@@ -79,59 +40,133 @@ XLABEL=
 YLABEL=
 DEMEAN=false
 YRANGE=
-for i in "$@"
+while [[ $# -gt 0 ]]
 do
-  case $i in 
-  -labels=*)      LABELS=${i/-labels=}; LABELS=(${LABELS//,/ }) ;;
-  display)        DISPLAY_FLAG=true    ;;
-  interactive)    INTERACTIVE=true     ;;
-  -title=*)       TITLE=${i/-title=}   ;;
-  -out=*)         OUT=${i/-out=}       ;;
-  -outdir=*)      OUTDIR=${i/-outdir=} ;;
-  -filelabels=*)  FILE_LABELS=${i/-filelabels=}; FILE_LABELS=(${FILE_LABELS//,/ }) ;;
-  quiet)          QUIET=true           ;;
-  debug)          DEBUG=true           ;;
-  force)          FORCE=true           ;;
-  -xticks=*)      XTICKS=${i/-xticks=} ;;
-  -date-format=*) XDATA_FORMAT=${i/-date-format=} ;;
-  -date-plot=*)   PLOT_DATE_FORMAT=${i/-date-plot=} ;;
-  logy)           LOGY=true            ;;
-  logx)           LOGX=true            ;;
-  -start=*)       START=${i/-start=}   ;;
-  -len=*)         LEN=${i/-len=}       ;;
-  -point-size=*)  POINTSIZE=${i/-point-size=} ;;
-  -max-point-size=*) MAX_POINTSIZE=${i/-max-point-size=} ;;
-  dyn-point-size) DYNPS=true           ;;
-  -font=*)        FONT=${i/-font=}     ;;
-  -xlabel=*)      XLABEL=${i/-xlabel=} ;;
-  -ylabel=*)      YLABEL=${i/-ylabel=} ;;
-  demean)         DEMEAN=true          ;;
-  -terminal=*)    TERMINAL=${i/-terminal=} ;;
-  -size=*)        SIZE=${i/-size=}     ;;
-  -yrange=*)
-    YRANGE=${i/-yrange=}
+  case "$1" in 
+  --files|-f) 
+    shift; FILE_LIST=("${1//,/ }")
+  ;;
+  --filelabels|-F) 
+    shift; FILE_LABELS=("${1//,/ }")
+  ;;
+  --labels|-b) #label for the data columns, comma-separated
+    shift; LABELS=("${1//,/ }")
+  ;;
+  --display) #shows the plot(after writing the output file
+    DISPLAY_FLAG=true    
+  ;;
+  --interactive) #do not produce the output file but show it in x11
+    INTERACTIVE=true     
+  ;;
+  --title|-T) #set the title explicitly
+    shift; TITLE="$1"
+  ;;
+  --out|-o) #name of plot file, defaults to first data file, the plot extension added automaticall, if needed
+    shift; OUT="$1"
+  ;;
+  --outdir) #save plot file to this dir; this can also be specified in -out but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in --out
+    shift; OUTDIR="$1"
+  ;;
+  --quiet) #limit the user feedback
+    QUIET=true
+  ;;
+  --debug|-D) #show debug info during execution
+    DEBUG=true           
+  ;;
+  --force) #delete plot file, if existing; by default no replotting is done
+    FORCE=true           
+  ;;
+  --xticks) #use special formating in the x-axis ticks: dates, float, integer, scientific, defaults to float
+    shift; XTICKS="$1"
+  ;;
+  --x-date-data) #speficy the format of the dates in the data file/files, defaults to %Y-%m-%d
+    shift; XDATA_FORMAT="$1"
+  ;;
+  --x-date-format|-q) #speficy the format of the dates in the x-axis, defaults to %Y-%m-%d
+    shift; PLOT_DATE_FORMAT="$1"
+  ;;
+  --logy|-l) #use logarithmic y-axis scale and plot absolute values
+    LOGY=true            
+  ;;
+  --logx) #use logarithmic x-axis scale
+    LOGX=true            
+  ;;
+  --start-x|-s) #plot only from this line onwards
+    shift; START="$1"
+  ;;
+  --end-x|-e) #plot only unit this line; this argument must come after --start-x
+    shift; LEN=$(( $1-START+1))
+  ;;  
+  --len) #plot only this number of lines
+    LEN="$1"
+  ;;
+  --point-size) #marker size, defaults to 0.5
+    shift; POINTSIZE="$1"
+  ;;
+  --dyn-point-size) #increase marker size for each additional line
+    DYNPS=true
+  ;;
+  --max-point-size) #maximum size of markers when dyn-point-size, defaults to 2
+    shift; MAX_POINTSIZE="$1"
+  ;;
+  --font) #font type and size, defaults to 'arial,16'
+    shift; FONT="$1"
+  ;;
+  --x-label|-X) #define x-axis label, defaults to none
+    shift; XLABEL="$1"
+  ;;
+  --y-label|-Y) #define y-axis label, defaults to none
+    shift; YLABEL="$1"
+  ;;
+  --demean) #remove the mean of all columns before plotting
+    DEMEAN=true          
+  ;;
+  --terminal) #set the gnuplot terminal type, defaults to pngcairo
+    shift; TERMINAL="$1"
+  ;;
+  --size) #set the terminal size, defaults to 1200,900
+    shift; SIZE="$1"
+  ;;
+  --y-range) #sets the limit of the y-axis range, defaults set whatever is set by gnuplot
+    shift;  YRANGE="$1"
     if [[ "${YRANGE/:}" == "$YRANGE" ]]
     then
       echo "ERROR: input -yrange=... must contain the character ':' separating the min and max values of the y-axis range."
       exit 3
     fi
   ;;
-  -h|help)        echo "$HELPSTR"; exit 0;;
+  --arguments) #list all arguments and exits
+    grep ') #' $BASH_SOURCE \
+      | grep -v grep \
+      | sed 's:)::g' \
+      | column -t -s\#
+    exit
+  ;;
+  --help|-h) #shows the help screen
+    echo "Plots one or more column data files.
+
+Mandatory arguments:
+--files <data file1>[,<data file2>[,...]] : files with data in column-wise format 
+--labels [t,][-,]column1label[,column2label[,...]], with meaning:
+  t            : abcissa (can handle dates in common formats)
+  -            : ignore this column
+  columnXlabel : label to give to the column in this data
+
+Optional arguments  :"
+    $BASH_SOURCE --arguments
+    exit 0
+  ;;
   *)
-    if [ -e $i ]
-    then
-      FILE_LIST+=($i)
-    else
-      echo "WARNING: ignoring argument '$i'"
-    fi
+    echo "WARNING: ignoring argument '$1'"
   ;;
   esac
+  shift
 done
 
 if [ "${LABELS:-x}" == "x" ]
 then
-  echo "ERROR: need -labels=* argument"
-  echo "$HELPSTR"
+  echo "ERROR: need --labels and --files arguments"
+  $BASH_SOURCE --help
   exit 3
 fi
 
