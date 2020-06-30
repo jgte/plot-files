@@ -228,8 +228,8 @@ set output "$OUT"
 set yrange [0:]
 #to put an empty boundary around the
 #data inside an autoscaled graph.
-# set offset graph 0.05,0.05,0.05,0.0
-# set xtics min,(max-min)/5,max
+set offset graph 0.05,0.05,0.05,0.0
+set xtics min,(max-min)/5,max
 set boxwidth width*$BOXWIDTH
 set style fill solid 0.5	#fillstyle
 set format x "%.2g"
