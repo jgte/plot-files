@@ -2,22 +2,6 @@
 
 DIR=$(cd $(dirname $BASH_SOURCE);pwd)
 
-DAT=$DIR/test2.dat
-$(dirname $DIR)/plot-files.sh \
-  --files $DAT \
-  --labels "t,$(head -n1 $DAT | awk '{for(i=2;i<=NF-1;i++){printf("%s,",$i)};printf("%s",$NF);}' )" \
-  --title "$DAT" \
-  --out $DIR/$(basename ${DAT%.dat})-plot-files \
-  --force \
-  --point-size 1 \
-  --set-key rmargin \
-  --plot-style points \
-  --xticks dates --x-date-data %Y/%m --x-date-format %y-%m \
-  --y-label "count" \
-  $@
-
-exit
-
 DAT=$DIR/test.dat
 $(dirname $DIR)/plot-files.sh \
   --files $DAT \
