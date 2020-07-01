@@ -10,7 +10,7 @@ $(dirname $DIR)/plot-files.sh \
   --out $DIR/$(basename ${DAT%.dat})-plot-files \
   --force \
   --point-size 1 \
-  --x-date-data %Y/%m --x-date-format %y-%m \
+  --xticks dates --x-date-data %Y/%m --x-date-format %y-%m \
   --y-label "count" \
   $@
 
