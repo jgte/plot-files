@@ -2,7 +2,7 @@
 
 if git st | grep -qw 'deleted:' >& /dev/null
 then
-  git add $(git -st | grep -qw 'deleted:' | awk '{print $2}')
+  git add $(git st | grep -qw 'deleted:' | awk '{print $2}')
 fi
 
 git add * 2> /dev/null
