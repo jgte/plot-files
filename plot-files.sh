@@ -42,6 +42,7 @@ DEMEAN=false
 YRANGE=
 SET_KEY=default
 PLOT_STYLE=linespoints
+POINT_TYPE=1
 while [[ $# -gt 0 ]]
 do
   case "$1" in
@@ -147,6 +148,10 @@ do
   --plot-style) #sets the plot style, one of lines, points, linespoints, impulses, dots, steps, errorbars, yerrorbars, xerrorbars, xyerrorbars, boxes, boxerrorbars, or boxxyerrorbars
     shift
     PLOT_STYLE="$1"
+  ;;
+  --point-style) #sets the marker style for the first file, given as an integer number, see http://www.gnuplotting.org/doc/ps_symbols.pdf
+    shift
+    POINT_STYLE="$1"
   ;;
   --arguments) #list all arguments and exits
     grep ') #' $BASH_SOURCE \
@@ -363,8 +368,8 @@ do
     for ((f=0;f<${#FILE_LIST[@]};f++))
     do
       #OFFSET and LEGEND were defined in previous iteration
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with $PLOT_STYLE  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with $PLOT_STYLE  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with $PLOT_STYLE pointsize 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with $PLOT_STYLE pointsize 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
       #increment file-wise color if there's only one column
       [ $NR_COL -eq 1 ] && c=$((c+1))
     done
@@ -384,7 +389,7 @@ do
         #append it to title
         LEGEND+=" $OFFSET"
       fi
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pt $((f+1)) ps $PS lw 2 lc $c")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $PS lw 2 lc $c")
       #increment file-wise color if there's only one column
       [ $NR_COL -eq 1 ] && c=$((c+1))
     done
