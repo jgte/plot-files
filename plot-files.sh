@@ -40,6 +40,8 @@ XLABEL=
 YLABEL=
 DEMEAN=false
 YRANGE=
+SET_KEY=default
+PLOT_STYLE=linespoints
 while [[ $# -gt 0 ]]
 do
   case "$1" in
@@ -138,6 +140,14 @@ do
       exit 3
     fi
   ;;
+  --set-key) #sets the legend outside the plotting area
+    shift
+    SET_KEY="$1"
+  ;;
+  --plot-style) #sets the plot style, one of lines, points, linespoints, impulses, dots, steps, errorbars, yerrorbars, xerrorbars, xyerrorbars, boxes, boxerrorbars, or boxxyerrorbars
+    shift
+    PLOT_STYLE="$1"
+  ;;
   --arguments) #list all arguments and exits
     grep ') #' $BASH_SOURCE \
       | grep -v grep \
@@ -146,7 +156,7 @@ do
     exit
   ;;
   --help|-h) #shows the help screen
-    echo "Plots one or more column data files.
+    echo "Plots one or more column data files. Be sure to checkout http://www.gnuplot.info/docs_4.0/gpcard.pdf
 
 Mandatory arguments:
 --files <data file1>[,<data file2>[,...]] : files with data in column-wise format 
@@ -257,6 +267,8 @@ then
   echo "terminal    : $TERMINAL"
   echo "size        : $SIZE"
   echo "yrange      : $YRANGE"
+  echo "set-key     : $SET_KEY"
+  echo "plot-style  : $PLOT_STYLE"
 fi
 
 #determine xdata column
@@ -351,8 +363,8 @@ do
     for ((f=0;f<${#FILE_LIST[@]};f++))
     do
       #OFFSET and LEGEND were defined in previous iteration
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with lp  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET - \$$COL/2) with $PLOT_STYLE  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} - sigma'")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$cp - $OFFSET + \$$COL/2) with $PLOT_STYLE  ps 0 lw 1 lc $c title '${LEGEND/ ?$OFFSET} + sigma'")
       #increment file-wise color if there's only one column
       [ $NR_COL -eq 1 ] && c=$((c+1))
     done
@@ -372,7 +384,7 @@ do
         #append it to title
         LEGEND+=" $OFFSET"
       fi
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with lp pt $((f+1)) ps $PS lw 2 lc $c")
+      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pt $((f+1)) ps $PS lw 2 lc $c")
       #increment file-wise color if there's only one column
       [ $NR_COL -eq 1 ] && c=$((c+1))
     done
@@ -414,6 +426,7 @@ set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
 $(printf '%s\n' "${FMT_CMD[@]:-}")
 $(printf '%s\n' "${POST_FMT_CMD[@]:-}")
+set key $SET_KEY
 $PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
@@ -442,6 +455,7 @@ set xlabel "$XLABEL"
 set ylabel "$YLABEL"
 $(printf '%s\n' "${FMT_CMD[@]:-}")
 $(printf '%s\n' "${POST_FMT_CMD[@]:-}")
+set key $SET_KEY
 $PLOT_CMD
 %
 
