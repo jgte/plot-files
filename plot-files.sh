@@ -50,10 +50,10 @@ do
     set -x
   ;;
   --files|-f) 
-    shift; FILE_LIST=("${1//,/ }")
+    shift; for i in $(echo $1 | sed 's:,: :g'); do FILE_LIST+=($i); done
   ;;
   --filelabels|-F) 
-    shift; FILE_LABELS=("${1//,/ }")
+    shift; for i in $(echo $1 | sed 's:,: :g'); do FILE_LABELS+=($i); done
   ;;
   --labels|-b) #label for the data columns, comma-separated
     shift; LABELS=("${1//,/ }")
