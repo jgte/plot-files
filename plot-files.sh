@@ -49,11 +49,12 @@ do
   -x) #set -x bash option
     set -x
   ;;
-  --files|-f) 
-    shift; for i in $(echo $1 | sed 's:,: :g'); do FILE_LIST+=($i); done
+  --files|-f)
+    # https://stackoverflow.com/a/918931/2047215
+    shift; IFS=',' read -ra FILE_LIST <<< "$1"
   ;;
   --filelabels|-F) 
-    shift; for i in $(echo $1 | sed 's:,: :g'); do FILE_LABELS+=($i); done
+    shift; IFS=',' read -ra FILE_LABELS <<< "$1"
   ;;
   --labels|-b) #label for the data columns, comma-separated
     shift; LABELS=("${1//,/ }")
