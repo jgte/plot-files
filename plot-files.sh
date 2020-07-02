@@ -142,11 +142,11 @@ do
       exit 3
     fi
   ;;
-  --set-key) #sets the legend outside the plotting area
+  --set-key) #sets location of the legend; one of left, right, top, bottom, center, inside, outside, lmargin, rmargin, tmargin, bmargin
     shift
     SET_KEY="$1"
   ;;
-  --plot-style) #sets the plot style, one of lines, points, linespoints, impulses, dots, steps, errorbars, yerrorbars, xerrorbars, xyerrorbars, boxes, boxerrorbars, or boxxyerrorbars
+  --plot-style) #sets the plot style; one of lines, points, linespoints, impulses, dots, steps, errorbars, yerrorbars, xerrorbars, xyerrorbars, boxes, boxerrorbars, or boxxyerrorbars
     shift
     PLOT_STYLE="$1"
   ;;
