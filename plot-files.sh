@@ -42,7 +42,7 @@ DEMEAN=false
 YRANGE=
 SET_KEY=default
 PLOT_STYLE=linespoints
-POINT_TYPE=1
+POINT_STYLE=1
 while [[ $# -gt 0 ]]
 do
   case "$1" in

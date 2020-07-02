@@ -139,7 +139,7 @@ cat $DATA_FILE | \
   sort -g > $DATA_FILE.tmp && \
   mv -f $DATA_FILE.tmp $DATA_FILE
 
-#remove outliers if asked
+#remove outliers if asked (they are set to zero)
 if $RM_OUTLIERS
 then
   cat $DATA_FILE | awk '
