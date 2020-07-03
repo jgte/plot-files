@@ -57,14 +57,14 @@ do
     shift; IFS=',' read -ra FILE_LABELS <<< "$1"
     for ((i=0;i<${#FILE_LABELS[@]};f++))
     do
-      [ "${FILE_LABELS[@]}" == "null" ] && FILE_LABELS[i]=''
+      [ "${FILE_LABELS[i]}" == "null" ] && FILE_LABELS[i]=''
     done
   ;;
   --labels|-b) #label for the data columns, comma-separated and use 'null' to suppress that legend entry
     shift; IFS=',' read -ra LABELS <<< "$1"
     for ((i=0;i<${#LABELS[@]};f++))
     do
-      [ "${LABELS[@]}" == "null" ] && LABELS[i]=''
+      [ "${LABELS[i]}" == "null" ] && LABELS[i]=''
     done
   ;;
   --display) #shows the plot(after writing the output file
