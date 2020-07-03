@@ -30,10 +30,14 @@ case "$1" in
   version) #shows the latest version of the image
     git -C $DIR log --pretty=format:%ad --date=short | head -n1
   ;;
+  is-docker-running) #checks if the docker deamon is running
+    docker ps -a > /dev/null && exit 0 || exit 1
+  ;;
   gnuplot-image) #shows the name if the gnuplot image
     echo $($BASH_SOURCE dockerhub-user)/gnuplot:latest
   ;;
   gnuplot-rebuild) #build the gnuplot image (slow, should not change significantly)
+    $BASH_SOURCE is-docker-running || exit 1
     IDs=$($BASH_SOURCE gnuplot-images | awk '{print $3}')
     [ -z "$IDs" ] || docker rmi -f $IDs
   echo "\
@@ -70,15 +74,19 @@ CMD [\"help\"]
 RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
+    $BASH_SOURCE is-docker-running || exit 1
     docker ps -a | grep $($BASH_SOURCE image) | awk '{print $1}'
   ;;
   ps-exited) #shows all containers IDs for the latest version of the image that have exited
+    $BASH_SOURCE is-docker-running || exit 1
     docker ps -a | grep $($BASH_SOURCE image) | awk '/Exited \(/ {print $1}'
   ;;
   images) #shows all images relevant to this app
+    $BASH_SOURCE is-docker-running || exit 1
     docker images | grep $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name)
   ;;
   clean-none|clear-none) #removes all images with tag '<none>' as well as the corresponding containers
+    $BASH_SOURCE is-docker-running || exit 1
     for i in $(docker images | awk '/<none>/ {print $3}')
     do
       IDs=$(docker ps -a |awk '/'$i'/ {print $1}')
@@ -87,10 +95,12 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     done
   ;;
   clean-exited|clear-exited) #removes all exited containers for the latest version of the image
+    $BASH_SOURCE is-docker-running || exit 1
     IDs=$($BASH_SOURCE ps-exited)
     [ -z "$IDs" ] || docker rm $IDs
   ;;
   clean-images) #removes all images relevant to this app
+    $BASH_SOURCE is-docker-running || exit 1
     IDs=$($BASH_SOURCE images | awk '{print $3}')
     [ -z "$IDs" ] || docker rmi -f $IDs
   ;;
@@ -104,9 +114,11 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     $DIR/git.sh
   ;;
   push) #pushes images to dockerhub
+    $BASH_SOURCE is-docker-running || exit 1
     docker push $($BASH_SOURCE image)
   ;;
   build) #build the docker image
+    $BASH_SOURCE is-docker-running || exit 1
     $BASH_SOURCE git-push
     $BASH_SOURCE dockerfile \
       | docker build -t $($BASH_SOURCE image) -
@@ -118,10 +130,12 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     done
   ;;
   sh) #spins up a new container and starts an interactive shell in it
+    $BASH_SOURCE is-docker-running || exit 1
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
     docker run -it --rm --volume=$PWD:$($BASH_SOURCE io-dir) $($BASH_SOURCE image) sh
   ;;
   run) #spins up a new container and passes all aditional arguments to it
+    $BASH_SOURCE is-docker-running || exit 1
     [ -z "$($BASH_SOURCE images)" ] && $BASH_SOURCE build
     docker run --rm --volume=$PWD:$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
   ;;
