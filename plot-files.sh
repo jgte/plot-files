@@ -363,7 +363,7 @@ PLOT_ARGS=()
 COL=0
 #plot line index (used for consistent coloring)
 c=0
-for i in "${LABELS[@]}
+for i in "${LABELS[@]}"
 do
   COL=$((COL+1))
   case $i in
