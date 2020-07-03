@@ -10,6 +10,9 @@ function extension()
   echo "$OUT"
 }
 
+#TODO: plot multiple data groups:
+# https://gnuplot-surprising.blogspot.com/2011/09/plot-histograms-using-boxes.html
+
 DATA_FILE=/tmp/plot-hist.$RANDOM.data
 TITLE=
 OUT=plot-hist.png
@@ -24,7 +27,8 @@ BOXWIDTH=1
 TERMINAL=pngcairo #also used for file extension (try jpeg, fig, gif, svg, tikz, etc)
 SIZE="1200,900"
 FONT="arial,16"
-
+BAR_COLOUR="gray20"
+NOBORDER=false
 iC=0
 while [[ $# -gt 0 ]]
 do
@@ -85,6 +89,12 @@ do
     ;;
     --font) #font type and size, defaults to 'arial,16'
       shift; FONT="$1"
+    ;;
+    --bar-colour) # color of the histogram bars, see https://stackoverflow.com/a/54659829/2047215
+      shift; BAR_COLOUR="$1"
+    ;;
+    --no-border) #turns off the outline of the bars
+      NOBORDER=true
     ;;
     --arguments) #shows all available modes and exit
       grep ') #' $BASH_SOURCE \
@@ -213,6 +223,8 @@ box-width   : $BOXWIDTH
 terminal    : $TERMINAL
 size        : $SIZE
 font        : $FONT
+bar-colour  : $BAR_COLOUR
+no-border   : $NOBORDER
 
 Some internal parameters:
 min    : $min
@@ -237,7 +249,7 @@ set output "$OUT"
 # set xrange [min-(max-min)*0.05:max+(max-min)*0.05]
 set yrange [0:]
 set boxwidth width*$BOXWIDTH
-set style fill solid 0.5	#fillstyle
+set style fill transparent solid 0.5 $($NOBORDER && echo noborder)	#fillstyle
 set format x "%.2g"
 set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
@@ -245,7 +257,7 @@ set ylabel "count"
 $($LOGY && echo "set logscale y")
 set title "$TITLE" 
 #count and plot
-plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"gray" notitle
+plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"$BAR_COLOUR" notitle
 %
 
 echo "plotted $OUT"
