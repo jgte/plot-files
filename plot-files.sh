@@ -55,14 +55,14 @@ do
   ;;
   --filelabels|-F) #label for the data files, comma-separated and use 'null' to suppress that legend entry
     shift; IFS=',' read -ra FILE_LABELS <<< "$1"
-    for ((i=0;i<${#FILE_LABELS[@]};f++))
+    for ((i=0;i<${#FILE_LABELS[@]};i++))
     do
       [ "${FILE_LABELS[i]}" == "null" ] && FILE_LABELS[i]=''
     done
   ;;
   --labels|-b) #label for the data columns, comma-separated and use 'null' to suppress that legend entry
     shift; IFS=',' read -ra LABELS <<< "$1"
-    for ((i=0;i<${#LABELS[@]};f++))
+    for ((i=0;i<${#LABELS[@]};i++))
     do
       [ "${LABELS[i]}" == "null" ] && LABELS[i]=''
     done
