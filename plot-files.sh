@@ -53,11 +53,19 @@ do
     # https://stackoverflow.com/a/918931/2047215
     shift; IFS=',' read -ra FILE_LIST <<< "$1"
   ;;
-  --filelabels|-F) 
+  --filelabels|-F) #label for the data files, comma-separated and use 'null' to suppress that legend entry
     shift; IFS=',' read -ra FILE_LABELS <<< "$1"
+    for ((i=0;i<${#FILE_LABELS[@]};f++))
+    do
+      [ "${FILE_LABELS[@]}" == "null" ] && FILE_LABELS[i]=''
+    done
   ;;
-  --labels|-b) #label for the data columns, comma-separated and use an empty string to suppress that legend entry
+  --labels|-b) #label for the data columns, comma-separated and use 'null' to suppress that legend entry
     shift; IFS=',' read -ra LABELS <<< "$1"
+    for ((i=0;i<${#LABELS[@]};f++))
+    do
+      [ "${LABELS[@]}" == "null" ] && LABELS[i]=''
+    done
   ;;
   --display) #shows the plot(after writing the output file
     DISPLAY_FLAG=true    
@@ -355,7 +363,7 @@ PLOT_ARGS=()
 COL=0
 #plot line index (used for consistent coloring)
 c=0
-for i in "${LABELS[@]}"
+for i in "${LABELS[@]}
 do
   COL=$((COL+1))
   case $i in
