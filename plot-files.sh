@@ -251,16 +251,16 @@ $FORCE && rm -f $OUT
 
 if ! $QUIET
 then
-  echo "Plotting the following files:"
+  echo "Plotting the following ${#FILE_LIST[@]} files:"
   printf '%s\n' "${FILE_LIST[@]}"
-  echo "labels      : ${LABELS[@]}"
+  echo "labels      : ${LABELS[@]} (${#LABELS[@]} entries)"
   echo "display     : $DISPLAY_FLAG"
   echo "interactive : $INTERACTIVE"
   echo "title       : $TITLE"
   echo "out         : $OUT"
   echo "out dir     : $OUTDIR"
   echo "extension   : $EXT"
-  echo "file labels : ${FILE_LABELS[@]:-}"
+  echo "file labels : ${FILE_LABELS[@]:-} (${#FILE_LABELS[@]} entries)"
   echo "xticks      : $XTICKS"
   echo "date-format : $XDATA_FORMAT"
   echo "date-plot   : $PLOT_DATE_FORMAT"
@@ -355,7 +355,7 @@ PLOT_ARGS=()
 COL=0
 #plot line index (used for consistent coloring)
 c=0
-for i in ${LABELS[@]}
+for i in "${LABELS[@]}"
 do
   COL=$((COL+1))
   case $i in
