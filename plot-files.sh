@@ -56,8 +56,8 @@ do
   --filelabels|-F) 
     shift; IFS=',' read -ra FILE_LABELS <<< "$1"
   ;;
-  --labels|-b) #label for the data columns, comma-separated
-    shift; LABELS=("${1//,/ }")
+  --labels|-b) #label for the data columns, comma-separated and use an empty string to suppress that legend entry
+    shift; IFS=',' read -ra LABELS <<< "$1"
   ;;
   --display) #shows the plot(after writing the output file
     DISPLAY_FLAG=true    
