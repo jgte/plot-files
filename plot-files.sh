@@ -79,9 +79,6 @@ do
   --interactive) #do not produce the output file but show it in x11
     INTERACTIVE=true     
   ;;
-  --title|-T) #set the title explicitly
-    shift; TITLE="$1"
-  ;;
   --quiet) #limit the user feedback
     QUIET=true
   ;;
@@ -90,6 +87,9 @@ do
   ;;
   --force) #delete plot file, if existing; by default no replotting is done
     FORCE=true           
+  ;;
+  --title|-T) #set the title explicitly
+    shift; TITLE="$1"
   ;;
   --xticks) #use special formating in the x-axis ticks: dates, float, integer, scientific, defaults to float
     shift; XTICKS="$1"
@@ -275,8 +275,8 @@ then
   echo "logy        : $LOGY"
   echo "logx        : $LOGX"
   echo "font        : $FONT"
-  echo "xlable      : $XLABEL"
-  echo "ylable      : $YLABEL"
+  echo "xlabel      : $XLABEL"
+  echo "ylabel      : $YLABEL"
   echo "demean      : $DEMEAN"
   echo "terminal    : $TERMINAL"
   echo "size        : $SIZE"
