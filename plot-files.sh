@@ -200,7 +200,7 @@ fi
 if [ ${#FILE_LIST[@]} -lt 1 ]
 then
   echo "ERROR: need valid file name(s) as argument(s)"
-  echo "$HELPSTR"
+  $BASH_SOURCE --help
   exit 3
 fi
 
