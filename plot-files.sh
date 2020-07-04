@@ -67,7 +67,13 @@ do
       [ "${LABELS[i]}" == "null" ] && LABELS[i]=''
     done
   ;;
-  --display) #shows the plot(after writing the output file
+  --out|-o) #name of plot file, defaults to first data file, the plot is extension added automaticall, if needed
+    shift; OUT="$1"
+  ;;
+  --outdir) #save plot file to this dir; this can also be specified in -out but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in --out
+    shift; OUTDIR="$1"
+  ;;
+  --display) #shows the plot after writing the output file
     DISPLAY_FLAG=true    
   ;;
   --interactive) #do not produce the output file but show it in x11
@@ -75,12 +81,6 @@ do
   ;;
   --title|-T) #set the title explicitly
     shift; TITLE="$1"
-  ;;
-  --out|-o) #name of plot file, defaults to first data file, the plot extension added automaticall, if needed
-    shift; OUT="$1"
-  ;;
-  --outdir) #save plot file to this dir; this can also be specified in -out but this option is used in containers to ensure the file is saved to a mounted dir; overrides the path of the file specified in --out
-    shift; OUTDIR="$1"
   ;;
   --quiet) #limit the user feedback
     QUIET=true
@@ -325,7 +325,6 @@ $LOGY && FMT_CMD+=(
 $LOGX && FMT_CMD+=(
   "set logscale x 10"
 )
-
 #by default, expect x data to be numeric values
 XDATA_CMD="(\$$XDATA)"
 #enforce date format if requested
@@ -353,9 +352,13 @@ case $XTICKS in
     exit 3
   ;;
 esac
-
-#user feedback
-$DEBUG && echo -e "format  cmd :\n$(printf "%s\n" "${FMT_CMD[@]:-}")"
+#enforce requested y-axis range
+if [ ! -z "$YRANGE" ]
+then
+  FMT_CMD+=(
+    "set yrange [$YRANGE]"
+  )
+fi
 
 #init gnuplot plot command
 PLOT_ARGS=()
@@ -405,31 +408,8 @@ do
   ;;
   esac
 done
-PLOT_CMD="plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
 
-#user feedback
-$DEBUG && echo "gnuplot cmd : $PLOT_CMD"
-
-POST_FMT_CMD=()
-if [ ! -z "$YRANGE" ]
-then
-  POST_FMT_CMD+=(
-    "set yrange [$YRANGE]"
-  )
-fi
-
-#user feedback
-$DEBUG && echo -e "post fmt cmd:\n$(printf "%s\n" "${POST_FMT_CMD[@]:-}")"
-
-
-
-if $INTERACTIVE
-then
-# https://superuser.com/questions/1096831/start-an-interactive-session-in-gnuplot-and-execute-some-commands-when-it-opens
-prmpt () { (echo -n "gnuplot> " >&2) }
-gnuplotInPipe () {
-  echo "
-set terminal x11 size $SIZE font \"$FONT\"
+PLOT_CMD="\
 set autoscale
 set xtic auto
 set ytic auto
@@ -439,8 +419,19 @@ set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
 $(printf '%s\n' "${FMT_CMD[@]:-}")
-$(printf '%s\n' "${POST_FMT_CMD[@]:-}")
 set key $SET_KEY
+plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
+
+#user feedback
+$DEBUG && echo "gnuplot cmd : $PLOT_CMD"
+
+if $INTERACTIVE
+then
+# https://superuser.com/questions/1096831/start-an-interactive-session-in-gnuplot-and-execute-some-commands-when-it-opens
+prmpt () { (echo -n "gnuplot> " >&2) }
+gnuplotInPipe () {
+  echo "
+set terminal x11 size $SIZE font \"$FONT\"
 $PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
   prmpt 
@@ -460,16 +451,6 @@ else
 [ -e "$OUT" ] || gnuplot <<%
 set terminal $TERMINAL size $SIZE font "$FONT" $([[ ! "${TERMINAL/cairo}" == "$TERMINAL" ]] && echo enhanced)
 set output "$OUT"
-set autoscale
-set xtic auto
-set ytic auto
-set grid
-set title "$TITLE"
-set xlabel "$XLABEL"
-set ylabel "$YLABEL"
-$(printf '%s\n' "${FMT_CMD[@]:-}")
-$(printf '%s\n' "${POST_FMT_CMD[@]:-}")
-set key $SET_KEY
 $PLOT_CMD
 %
 
