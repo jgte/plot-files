@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -uex
 
 DIR=$(cd $(dirname $BASH_SOURCE);pwd)
 MODE="$(echo "$1"| tr '[:upper:]' '[:lower:]')"
