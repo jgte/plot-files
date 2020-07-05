@@ -1,25 +1,16 @@
 #!/bin/bash
 
 DIR=$(cd $(dirname $BASH_SOURCE);pwd)
-
-case "$1" in
-  modes) #shows all available modes
+MODE="$(echo "$1"| tr '[:upper:]' '[:lower:]')"
+case "$MODE" in
+  modes|help|-h) #shows all available modes
     grep ') #' $BASH_SOURCE \
       | grep -v grep \
       | sed 's:)::g' \
       | column -t -s\#
   ;;
-  author|Author) #shows the author's email
-    echo teixeira@csr.utexas.edu
-  ;;
-  dockerhub-user) #shows dockerhub usename
-    echo spacegravimetry
-  ;;
-  github|GitHub) #shows github repo URL
-    echo https://github.com/jgte/plot-files.git
-  ;;
-  app-name) #shows current app's name
-    echo plot-files
+  author|dockerhub-user|github|app-name|apk-list|base-image|run-more) #get app parameters from dockerize.par
+    awk '/^'$MODE' / {for (i=2; i<=NF; i++) printf("%s ",$i)}' $DIR/dockerize.par
   ;;
   app-dir) #shows the directory where the app will be sitting inside the container
     echo /$($BASH_SOURCE app-name)
@@ -33,29 +24,19 @@ case "$1" in
   is-docker-running) #checks if the docker deamon is running
     docker ps -a > /dev/null && exit 0 || exit 1
   ;;
-  gnuplot-image) #shows the name if the gnuplot image
+  base-image) #shows the name if the base image
     echo $($BASH_SOURCE dockerhub-user)/gnuplot:latest
   ;;
-  gnuplot-rebuild) #build the gnuplot image (slow, should not change significantly)
+  base-rebuild) #build the base image (slow, should not change significantly)
     $BASH_SOURCE is-docker-running || exit 1
-    IDs=$($BASH_SOURCE gnuplot-images | awk '{print $3}')
+    IDs=$($BASH_SOURCE base-image | awk '{print $3}')
     [ -z "$IDs" ] || docker rmi -f $IDs
   echo "\
 FROM alpine:3.9.6
-# based on https://github.com/pavlov99/docker-gnuplot/blob/master/Dockerfile
 RUN apk add --no-cache --update \
-    git \
-    bash \
-    util-linux \
-    bc \
-    gnuplot \
-    fontconfig \
-    ttf-ubuntu-font-family \
-    msttcorefonts-installer \
-    && update-ms-fonts \
-    && fc-cache -f 
-" | docker build -t $($BASH_SOURCE gnuplot-image) -
-    docker push $($BASH_SOURCE gnuplot-image)
+$($BASH_SOURCE apk-list)
+" | docker build -t $($BASH_SOURCE base-image) -
+    docker push $($BASH_SOURCE base-image)
   ;;
   image|tag) #shows the image tag
     echo $($BASH_SOURCE dockerhub-user)/$($BASH_SOURCE app-name):$($BASH_SOURCE version)
@@ -65,13 +46,12 @@ RUN apk add --no-cache --update \
   ;;
   dockerfile) #show the dockerfile
   echo "\
-FROM $($BASH_SOURCE gnuplot-image)
+FROM $($BASH_SOURCE base-image)
 $(for i in Author GitHub; do echo "LABEL $i \"$($BASH_SOURCE $i)\""; done)
 VOLUME $($BASH_SOURCE io-dir)
 WORKDIR $($BASH_SOURCE app-dir)
 ENTRYPOINT [\"./entrypoint.sh\"]
-CMD [\"help\"]
-RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
+RUN git clone $($BASH_SOURCE github) . && rm -fr .git $($BASH_SOURCE run-more)"
   ;;
   ps-a) #shows all containers IDs for the latest version of the image
     $BASH_SOURCE is-docker-running || exit 1
@@ -140,20 +120,29 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
     docker run --rm --volume=$PWD:$($BASH_SOURCE io-dir) $($BASH_SOURCE image) ${@:2}
   ;;
   # ---------- TACC stuff ---------
+  s-module) #load singularity module in tacc
+    if which module
+    then
+      module load tacc-singularity
+    else
+      echo "WARNING: cannot load module, possibly this is not a TACC machine?"
+      exit 3
+    fi
+  ;;
   s-image) #return the name of the singularity image file
     echo $DIR/$($BASH_SOURCE app-name)_$($BASH_SOURCE version).sif
   ;;
   s-pull) #pulls the singularity image from docker hub
-    module load tacc-singularity
+    $BASH_SOURCE s-module || true
     singularity pull --name $($BASH_SOURCE s-image) docker://$($BASH_SOURCE image)
   ;;
   s-sh) #spins up a new singularity container and starts an interactive shell in it
-    module load tacc-singularity
+    $BASH_SOURCE s-module || true
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     singularity shell -B $PWD:$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)
   ;;
   s-shw) #spins up a new writable singularity container and starts an interactive shell in it
-    module load tacc-singularity
+    $BASH_SOURCE s-module || true
     [ -e $($BASH_SOURCE s-image)w ] || singularity build --sandbox $($BASH_SOURCE s-image)w docker://$($BASH_SOURCE image)
     singularity shell -B $PWD:$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image)w
   ;;
@@ -161,7 +150,7 @@ RUN git clone $($BASH_SOURCE github) . && rm -fr .git"
    echo singularity exec -B $PWD:/$($BASH_SOURCE io-dir) --cleanenv $($BASH_SOURCE s-image) $($BASH_SOURCE app-dir)/entrypoint.sh ${@:2}
   ;; 
   s-run) #spins up a new singularity container and passes all aditional arguments to it
-    module load tacc-singularity
+    $BASH_SOURCE s-module || true
     [ -e $($BASH_SOURCE s-image) ] || $BASH_SOURCE s-pull
     $($BASH_SOURCE s-com) ${@:2}
   ;;
