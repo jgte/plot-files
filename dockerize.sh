@@ -10,6 +10,11 @@ case "$MODE" in
       | column -t -s\#
   ;;
   author|dockerhub-user|github|app-name|apk-list|base-image|run-more) #get app parameters from dockerize.par
+    if ! grep -q "$MODE" $DIR/dockerize.par
+    then
+      echo "ERROR: need file $DIR/dockerize.par to contain the entry '$MODE' followed by a valid value" 1>&2
+      exit 3
+    fi
     awk '/^'$MODE' / {if (NF==2) {print $2} else {for (i=2; i<=NF; i++) printf("%s ",$i)}}' $DIR/dockerize.par
   ;;
   app-dir) #shows the directory where the app will be sitting inside the container
