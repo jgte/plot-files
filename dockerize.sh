@@ -10,7 +10,7 @@ case "$MODE" in
       | column -t -s\#
   ;;
   author|dockerhub-user|github|app-name|apk-list|base-image|run-more) #get app parameters from dockerize.par
-    awk '/^'$MODE' / {for (i=2; i<=NF; i++) printf("%s ",$i)}' $DIR/dockerize.par
+    awk '/^'$MODE' / {if (NF==2) {print $2} else {for (i=2; i<=NF; i++) printf("%s ",$i)}}' $DIR/dockerize.par
   ;;
   app-dir) #shows the directory where the app will be sitting inside the container
     echo /$($BASH_SOURCE app-name)
