@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import time
@@ -17,7 +17,7 @@ import time_conversion as tc
 import numpy as np 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import faulthandler; faulthandler.enable()
+# import faulthandler; faulthandler.enable()
 from operator import sub
 from scipy.interpolate import interp1d
 from scipy import signal
@@ -68,9 +68,9 @@ def plot_wrapper(x,y,l,isabs,smooth_w,ispsa,color,isxdates):
     dx=xstep(x)
     w=gauss_window(smooth_w,dx)
     if parsed.debug:
-      print "dx         : ",dx
-      print "gauss width: ",smooth_w
-      # print "gauss coeff: ",w
+      print(f"dx         : {dx}")
+      print(f"gauss width: {smooth_w}")
+      # print(f"gauss coeff: {w}")
     y=np.convolve(y,w,'same')
   if ispsa:
     dx=xstep(x)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     help='files to plot') 
   parser.add_argument('-b','--labels', nargs=1, type=str, required=True,
     help='columns to plot from FILES : '\
-    '"t" means abcissae, "-" ignores that column, '\
+    '"t" means abcissae, "-" ignores that column (use "\-" if the first column is to be ignored), '\
     '"std" plots the confidence interval over the previous timeseries '\
     'and anything else is used to label the plot legend') 
   parser.add_argument('-F','--filelabels', nargs='+', type=str, required=False, default='',\
@@ -133,8 +133,9 @@ if __name__ == '__main__':
     help='sets the y-label')
   parser.add_argument('-G','--grid', required=False, action='store_true', \
     help='turn on the major tick grid')
-  parser.add_argument('-n','--y-tick-fmt', nargs=1, type=str, required=False, default='%.2e', \
-    help='format of the tick labels for the y-axis')
+  #TODO: fix this
+  # parser.add_argument('-n','--y-tick-fmt', nargs=1, type=str, required=False, default='{:.2f}', \
+  #   help='format of the tick labels for the y-axis')
   
   
 
@@ -156,39 +157,46 @@ if __name__ == '__main__':
       plotfilename+='g'+str(int(parsed.gauss[0]))+'.'
     if parsed.diff:
       plotfilename+='diff.'
-    if parsed.log:
-      plotfilename+='log.'
+    if parsed.logy:
+      plotfilename+='logy.'
     if parsed.psa:
       plotfilename+='psa.'
-    plotfilename+='png'
 
-  labels=parsed.labels[0].split(',')
+  if not os.path.splitext(plotfilename)[-1]:
+    plotfilename+='.png'
+
+  if not os.path.splitext(plotfilename)[-1][1:] in plt.gcf().canvas.get_supported_filetypes():
+    print(f"WARNING: cannot handle extension {os.path.splitext(plotfilename)[-1]}, appending '.png'.")
+    plotfilename+='.png'
+  
+  labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
   if len(parsed.filelabels)>0:
     filelabels=parsed.filelabels
 
   if parsed.debug:
-    print "files:     : \n",'\n'.join(parsed.files)
-    print "labels:    : ",parsed.labels[0]
-    print "labels:    : ",labels
-    print "filelabels : ",filelabels
-    print "start      : ",parsed.start
-    print "len        : ",parsed.len
-    print "out        : ",plotfilename
-    print "diff       : ",parsed.diff
-    print "height     : ",parsed.height[0]
-    print "width      : ",parsed.width[0]
-    print "log        : ",parsed.log
-    print "title      : ",parsed.title
-    print "gauss      : ",parsed.gauss
-    print "psa        : ",parsed.psa
-    print "start-x    : ",parsed.start_x
-    print "stop-x     : ",parsed.end_x
-    print "widen      : ",parsed.widen
-    print "font-size  : ",parsed.font_size
-    print "x-label    : ",parsed.x_label
-    print "y-label    : ",parsed.y_label
-    print "grid       : ",parsed.grid
-    print "y-tick-fmt : ",parsed.y_tick_fmt
+    print("files:     :")
+    print('\n'.join(parsed.files))
+    print(f"labels:    : {parsed.labels[0]}")
+    print(f"labels:    : {labels}")
+    print(f"filelabels : {filelabels}")
+    print(f"start      : {parsed.start}")
+    print(f"len        : {parsed.len}")
+    print(f"out        : {plotfilename}")
+    print(f"diff       : {parsed.diff}")
+    print(f"height     : {parsed.height[0]}")
+    print(f"width      : {parsed.width[0]}")
+    print(f"logy       : {parsed.logy}")
+    print(f"title      : {parsed.title}")
+    print(f"gauss      : {parsed.gauss}")
+    print(f"psa        : {parsed.psa}")
+    print(f"start-x    : {parsed.start_x}")
+    print(f"stop-x     : {parsed.end_x}")
+    print(f"widen      : {parsed.widen}")
+    print(f"font-size  : {parsed.font_size}")
+    print(f"x-label    : {parsed.x_label}")
+    print(f"y-label    : {parsed.y_label}")
+    print(f"grid       : {parsed.grid}")
+    # print(f"y-tick-fmt : {parsed.y_tick_fmt}")
 
   plt.rcParams.update({'font.size': parsed.font_size[0]})
 
@@ -206,9 +214,9 @@ if __name__ == '__main__':
       stdcols+=(i,)  
   
   if parsed.debug:
-    print "tcol        : ",tcol
-    print "dcols       : ",dcols
-    print "stdcols     : ",stdcols
+    print(f"tcol        : {tcol}")
+    print(f"dcols       : {dcols}")
+    print(f"stdcols     : {stdcols}")
 
   assert(tcol>=0),"Need one of the label entries to be 't'."
 
@@ -228,11 +236,14 @@ if __name__ == '__main__':
         continue
       x=[]
       y=[]
-      dataname=filelabels[fi]+' '+labels[di]
+      if len(parsed.files)==1:
+        dataname=labels[di]
+      else:
+        dataname=filelabels[fi]+' '+labels[di]
       for l in d:
         dl=re.split('[\t, ]+',l)
         # if parsed.debug:
-        #  print 'dl   :',dl
+        #   print(f"dl   : {dl}")
         if parsed.x_date_format == 'none':
           try:
             t=float(dl[tcol])
@@ -250,19 +261,19 @@ if __name__ == '__main__':
           x.append(t)
           y.append(float(dl[di]))
       if parsed.debug:
-        print 'x=',x[0:3],'...',x[-3:]
-        print 'y=',y[0:3],'...',y[-3:]
+        print(f"x={x[0:3]}...{x[-3:]}")
+        print(f"y={y[0:3]}...{y[-3:]}")
       rx.append(x)
       ry.append(y)
       if parsed.debug:
-        print 'ri=',ri
-        print 'rx[',labels[di],']=',rx[ri][0:3],'...',rx[ri][-3:]
-        print 'ry[',labels[di],']=',ry[ri][0:3],'...',ry[ri][-3:]
+        print(f"ri={ri}")
+        print(f"rx[{labels[di]}]={rx[ri][0:3]}...{rx[ri][-3:]}")
+        print(f"ry[{labels[di]}]={ry[ri][0:3]}...{ry[ri][-3:]}")
       
       #branch on type of data to plot
       if di in stdcols:
         if parsed.debug:
-          print 'ci=',ci
+          print(f"ci={ci}")
         #plot confidence interval
         plt.fill_between(rx[ri],
           (np.array(ry[ri-1])-2*np.array(ry[ri])).tolist(),
@@ -272,10 +283,10 @@ if __name__ == '__main__':
         #get line color index
         ci+=1
         if parsed.debug:
-          print 'ci=',ci
+          print(f"ci={ci}")
         #plot data
         plot_wrapper(rx[ri],ry[ri],dataname,
-          parsed.log,parsed.gauss[0],parsed.psa,
+          parsed.logy,parsed.gauss[0],parsed.psa,
           "C"+str(ci),parsed.x_date_format!="none")
       
       if parsed.diff and ri==1:
@@ -290,11 +301,11 @@ if __name__ == '__main__':
         res=ry0(xc)-ry1(xc)
         #plot it
         plot_wrapper(xc,res,'diff',
-          parsed.log,parsed.gauss[0],parsed.psa,
+          parsed.logy,parsed.gauss[0],parsed.psa,
           "C"+str(ci),parsed.x_date_format!="none")
         if parsed.debug:
-          print 'rx[ diff ]=', xc[0:3],'...', xc[-3:]
-          print 'ry[ diff ]=',res[0:3],'...',res[-3:]
+          print(f"rx[ diff ]={ xc[0:3]}...{ xc[-3:]}")
+          print(f"ry[ diff ]={res[0:3]}...{res[-3:]}")
         #ignore remaining time series
         isdone=True
         
@@ -304,7 +315,8 @@ if __name__ == '__main__':
   if isplotted:
     fig=plt.gcf()
     fig.set_size_inches(parsed.width[0],parsed.height[0])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter(parsed.y_tick_fmt[0]))
+    #TODO: fix this
+    # plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(parsed.y_tick_fmt[0].format))
     # fmt=LogFormatterMathtext(labelOnlyBase=True)
     # plt.gca().yaxis.set_major_formatter(fmt)
 
@@ -324,7 +336,7 @@ if __name__ == '__main__':
         plt.xlabel(parsed.x_label[0])
       # plt.xlabel('time (from '+'{}'.format(rx[0][0])+' to '+'{}'.format(rx[0][-1])+')')
       # plt.xlabel('time')
-    if parsed.log:
+    if parsed.logy:
       plt.yscale('log')
     if len(parsed.title)>0:
       plt.title(parsed.title[0])
@@ -332,7 +344,7 @@ if __name__ == '__main__':
     if plotfilename=='interactive':
       plt.show()
     else:
+      print(plotfilename)
       plt.savefig(plotfilename,bbox_inches='tight')
-      print plotfilename
       if parsed.debug:
-        print "------------"
+        print("------------")
