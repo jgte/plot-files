@@ -29,9 +29,6 @@ case "$MODE" in
   is-docker-running) #checks if the docker deamon is running
     docker ps -a > /dev/null && exit 0 || exit 1
   ;;
-  base-image) #shows the name if the base image
-    echo $($BASH_SOURCE dockerhub-user)/gnuplot:latest
-  ;;
   base-rebuild) #build the base image (slow, should not change significantly)
     $BASH_SOURCE is-docker-running || exit 1
     IDs=$($BASH_SOURCE base-image | awk '{print $3}')
