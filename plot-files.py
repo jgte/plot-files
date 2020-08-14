@@ -133,18 +133,42 @@ if __name__ == '__main__':
     help='sets the y-label')
   parser.add_argument('-G','--grid', required=False, action='store_true', \
     help='turn on the major tick grid')
+  parser.add_argument('-K','--force', required=False, action='store_true', \
+    help='force replotting even if plot file is already available') 
+  parser.add_argument('-t','--timing', required=False, action='store_true', \
+    help='show timing information') 
+  parser.add_argument('-','--get-supported-filetypes', required=False, action='store_true', \
+    help='show supported file types and exit')
+
   #TODO: fix this
   # parser.add_argument('-n','--y-tick-fmt', nargs=1, type=str, required=False, default='{:.2f}', \
-  #   help='format of the tick labels for the y-axis')
-  
-  
+  #   help='format of the tick labels for the y-axis')    
 
   parsed = parser.parse_args()
+
+  if parsed.timing:
+    start_time=time.time()
+  def show_timing(str):
+    if parsed.timing:
+      print("Timinig : {str} : {sec} seconds".format(str=str,sec=(time.time() - start_time)))
+
+  #NOTICE: this is here to make it possible to see which file types are supported in this system;
+  if parsed.get_supported_filetypes:
+    print(list(plt.gcf().canvas.get_supported_filetypes().keys()))
+    show_timing('retrieved supported file types')
+    sys.exit()
+  #NOTICE: run this script with '--get-supported-filetypes -t -f 1 -b 1' to what what file types are supported and change this variable as needed
+  #NOTICE: plt.gcf().canvas.get_supported_filetypes().keys() is not evaluated every time this script is run because it is very slow in some systems
+  get_supported_filetypes=['eps', 'jpg', 'jpeg', 'pdf', 'pgf', 'png', 'ps', 'raw', 'rgba', 'svg', 'svgz', 'tif', 'tiff']
+
 
   #default file labels
   filelabels=[]
   for f in parsed.files:
     filelabels.append(os.path.basename(f))
+  if len(parsed.filelabels)>0:
+    filelabels=parsed.filelabels
+  show_timing('built filelabels')
 
   #build plot filename
   try:
@@ -161,17 +185,15 @@ if __name__ == '__main__':
       plotfilename+='logy.'
     if parsed.psa:
       plotfilename+='psa.'
-
   if not os.path.splitext(plotfilename)[-1]:
     plotfilename+='.png'
-
-  if not os.path.splitext(plotfilename)[-1][1:] in plt.gcf().canvas.get_supported_filetypes():
+  if not os.path.splitext(plotfilename)[-1][1:] in get_supported_filetypes:
     print(f"WARNING: cannot handle extension {os.path.splitext(plotfilename)[-1]}, appending '.png'.")
     plotfilename+='.png'
+  show_timing('built plotfilename')
   
   labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
-  if len(parsed.filelabels)>0:
-    filelabels=parsed.filelabels
+  show_timing('built labels')
 
   if parsed.debug:
     print("files:     :")
@@ -196,7 +218,13 @@ if __name__ == '__main__':
     print(f"x-label    : {parsed.x_label}")
     print(f"y-label    : {parsed.y_label}")
     print(f"grid       : {parsed.grid}")
+    print(f"force      : {parsed.force}")
+    print(f"timing     : {parsed.timing}")
     # print(f"y-tick-fmt : {parsed.y_tick_fmt}")
+
+  if os.path.isfile(plotfilename) and not parsed.force:
+    print("plot "+plotfilename+" already available, skipping...")
+    sys.exit()
 
   plt.rcParams.update({'font.size': parsed.font_size[0]})
 
@@ -217,8 +245,8 @@ if __name__ == '__main__':
     print(f"tcol        : {tcol}")
     print(f"dcols       : {dcols}")
     print(f"stdcols     : {stdcols}")
-
   assert(tcol>=0),"Need one of the label entries to be 't'."
+  show_timing('built column info')
 
   isplotted=False
   isdone=False
@@ -311,6 +339,7 @@ if __name__ == '__main__':
         
       ri+=1
       isplotted=True
+    show_timing('gathered data from {f}'.format(f=fn))
 
   if isplotted:
     fig=plt.gcf()
@@ -343,8 +372,10 @@ if __name__ == '__main__':
     plt.legend()
     if plotfilename=='interactive':
       plt.show()
+      show_timing('plot shown')
     else:
       print(plotfilename)
       plt.savefig(plotfilename,bbox_inches='tight')
+      show_timing('plot saved to {f}'.format(f=plotfilename))
       if parsed.debug:
         print("------------")
