@@ -44,6 +44,7 @@ XRANGE=
 SET_KEY=default
 PLOT_STYLE=linespoints
 POINT_STYLE=1
+SHORELINE=$(cd $(dirname $BASH_SOURCE);pwd)/Shoreline_Data.txt
 while [[ $# -gt 0 ]]
 do
   case "$1" in
@@ -61,7 +62,7 @@ do
       [ "${FILE_LABELS[i]}" == "null" ] && FILE_LABELS[i]=''
     done
   ;;
-  --labels|-b) #label for the data columns, comma-separated and use 'null' to suppress that legend entry
+  --labels|-b) #comma-separated list of labels for the data columns; use 'null' to suppress that legend entry but still plot the data; use '-' to skip plotting that column; use 't' to set that column as the free variable, i.e. the x-axis; use 'lat' and 'lon' to define the latitude and longitude of the points to plot
     shift; IFS=',' read -ra LABELS <<< "$1"
     for ((i=0;i<${#LABELS[@]};i++))
     do
@@ -75,19 +76,19 @@ do
     shift; OUTDIR="$1"
   ;;
   --display) #shows the plot after writing the output file
-    DISPLAY_FLAG=true    
+    DISPLAY_FLAG=true
   ;;
   --interactive) #do not produce the output file but show it in x11
-    INTERACTIVE=true     
+    INTERACTIVE=true
   ;;
   --quiet) #limit the user feedback
     QUIET=true
   ;;
   --debug|-D) #show debug info during execution
-    DEBUG=true           
+    DEBUG=true
   ;;
   --force) #delete plot file, if existing; by default no replotting is done
-    FORCE=true           
+    FORCE=true
   ;;
   --title|-T) #set the title explicitly
     shift; TITLE="$1"
@@ -102,17 +103,17 @@ do
     shift; PLOT_DATE_FORMAT="$1"
   ;;
   --logy|-l) #use logarithmic y-axis scale and plot absolute values
-    LOGY=true            
+    LOGY=true
   ;;
   --logx) #use logarithmic x-axis scale
-    LOGX=true            
+    LOGX=true
   ;;
   --start-x|-s) #plot only from this line onwards
     shift; START="$1"
   ;;
   --end-x|-e) #plot only unit this line; this argument must come after --start-x
     shift; LEN=$(( $1-START+1))
-  ;;  
+  ;;
   --len) #plot only this number of lines
     LEN="$1"
   ;;
@@ -135,7 +136,7 @@ do
     shift; YLABEL="$1"
   ;;
   --demean) #remove the mean of all columns before plotting
-    DEMEAN=true          
+    DEMEAN=true
   ;;
   --terminal) #set the gnuplot terminal type, defaults to pngcairo
     shift; TERMINAL="$1"
@@ -171,6 +172,10 @@ do
     shift
     POINT_STYLE="$1"
   ;;
+  --shoreline) #define this file as defining the shore lines in lat/lon plots, defaults to ./Shoreline_Data.txt
+    shift
+    SHORELINE="$1"
+  ;;
   --arguments) #list all arguments and exits
     grep ') #' $BASH_SOURCE \
       | grep -v grep \
@@ -182,7 +187,7 @@ do
     echo "Plots one or more column data files. Be sure to checkout http://www.gnuplot.info/docs_4.0/gpcard.pdf
 
 Mandatory arguments:
---files <data file1>[,<data file2>[,...]] : files with data in column-wise format 
+--files <data file1>[,<data file2>[,...]] : files with data in column-wise format
 --labels [t,][-,]column1label[,column2label[,...]], with meaning:
   t            : abcissa (can handle dates in common formats)
   -            : ignore this column
@@ -231,7 +236,7 @@ fi
 # middle() { local s=$1; local COL=$2; shift 2; sed -n "$s,$(( s+COL-1 ))p; $(( s+COL ))q" "$@"; }
 middle() { sed -n ''$1',+'$2'p' $3; }
 
-if [ ! -z "$START" ] || [ ! -z "$LEN" ] 
+if [ ! -z "$START" ] || [ ! -z "$LEN" ]
 then
   [ -z "$START" ] && START=1
   for ((f=0;f<${#FILE_LIST[@]};f++))
@@ -297,6 +302,8 @@ fi
 
 #determine xdata column
 XDATA=
+LAT=
+LON=
 COL=0
 NR_COL=0
 for i in ${LABELS[@]}
@@ -305,68 +312,102 @@ do
   case $i in
   "t")
     XDATA=$COL
-    $QUIET || echo "x-data  is  in   column $COL"
+    $QUIET || echo "x-data   is  in   column $COL"
   ;;
   "-")
-    $DEBUG && echo "ignoring data in column $COL"
+    $DEBUG && echo "ignoring  data in column $COL"
+  ;;
+  "lat")
+    LAT=$COL
+    $QUIET || echo "latitude  data in column $COL"
+  ;;
+  "lon")
+    LON=$COL
+    $QUIET || echo "longitude data in column $COL"
   ;;
   *)
     NR_COL=$((NR_COL+1))
-    $QUIET || echo "plotting data in column $COL"
+    $QUIET || echo "plotting  data in column $COL"
   ;;
   esac
 done
 
 #sanity
-if [ -z "$XDATA" ]
+if [ ! -z "$LAT" ] && [ ! -z "$LON" ]
+then
+  $DEBUG && echo "Producing latitude and longitude plot with domain defined in columns $LAT and $LON, respectively"
+  LATLON=true
+  [ -z "$XLABEL" ] && XLABEL="longitude [deg]"
+  [ -z "$YLABEL" ] && YLABEL="latitude [deg]"
+elif [ ! -z "$LAT" ] || [ ! -z "$LON" ]
+then
+  echo "ERROR: in the comma-separated list of columns in -labels=..., if one entry is 'lat', then also need another entry to be 'lon'"
+  exit 3
+elif [ -z "$XDATA" ]
 then
   echo "ERROR: need one entry in the comma-separated list of columns in -labels=... to be 't'"
   exit 3
+else
+  LATLON=false
 fi
 
 #init gnuplot formatting commands
 FMT_CMD=()
 
 #enfore logx/y if requested
-$LOGY && FMT_CMD+=(
+$LOGY && ! $LATLON && FMT_CMD+=(
   "set logscale y 10"
   "set format y \"%5.0e\""
 )
-$LOGX && FMT_CMD+=(
+$LOGX && ! $LATLON && FMT_CMD+=(
   "set logscale x 10"
 )
 #by default, expect x data to be numeric values
 XDATA_CMD="(\$$XDATA)"
 #enforce date format if requested
-case $XTICKS in
-  d*)
-    FMT_CMD+=(
-      "set xdata time"
-      "set timefmt \"$XDATA_FORMAT\""
-      "set format x \"$PLOT_DATE_FORMAT\""
-    )
-    #do not use numeric convertion for x data (set by default above)
-    XDATA_CMD=$XDATA
-  ;;
-  f*) 
-    FMT_CMD+=("set format x \"%f\"")
-  ;;
-  i*) 
-    FMT_CMD+=("set format x \"%.0f\"")
-  ;;
-  s*) 
-    FMT_CMD+=("set format x \"%e\"")
-  ;;
-  *)
-    echo "ERROR: cannot handle value '$XTICKS' of argument -xticks="
-    exit 3
-  ;;
-esac
+if ! $LATLON
+then
+  case $XTICKS in
+    d*)
+      FMT_CMD+=(
+        "set xdata time"
+        "set timefmt \"$XDATA_FORMAT\""
+        "set format x \"$PLOT_DATE_FORMAT\""
+      )
+      #do not use numeric convertion for x data (set by default above)
+      XDATA_CMD=$XDATA
+    ;;
+    f*)
+      FMT_CMD+=("set format x \"%f\"")
+    ;;
+    i*)
+      FMT_CMD+=("set format x \"%.0f\"")
+    ;;
+    s*)
+      FMT_CMD+=("set format x \"%e\"")
+    ;;
+    *)
+      echo "ERROR: cannot handle value '$XTICKS' of argument -xticks="
+      exit 3
+    ;;
+  esac
+else
+  if [ ! "$XTICKS" == "float" ]
+  then
+    echo "WARNING: ignoring --xticks with value '$XTICKS'"
+  fi
+fi
+
 #enforce requested y-axis range
 if [ ! -z "$YRANGE" ]
 then
   FMT_CMD+=(
     "set yrange [$YRANGE]"
+  )
+elif $LATLON
+then
+  FMT_CMD+=(
+    "set yrange [-90:90]"
   )
 fi
 
@@ -375,6 +416,11 @@ if [ ! -z "$XRANGE" ]
 then
   FMT_CMD+=(
     "set xrange [$XRANGE]"
+  )
+elif $LATLON
+then
+  FMT_CMD+=(
+    "set xrange [0:360]"
   )
 fi
 
@@ -388,7 +434,7 @@ for i in "${LABELS[@]}"
 do
   COL=$((COL+1))
   case $i in
-  "t"|"-") 
+  "t"|"-"|"lat"|"lon")
     #do nothing
   ;;
   err)
@@ -405,27 +451,44 @@ do
     done
   ;;
   *)
-    #reset file-wise color if there's only one data column
-    [ $NR_COL -eq 1 ] && c=1 || c=$((c+1))
-    for ((f=0;f<${#FILE_LIST[@]};f++))
-    do
-      $DYNPS && PS=$(echo "scale=1;($N-$i)/$N*($MAX_POINTSIZE-$POINTSIZE)+$POINTSIZE"|bc) || PS=$POINTSIZE
-      OFFSET=0
-      LEGEND="$i ${FILE_LABELS[f]}"
-      if $DEMEAN
-      then
-        #compute the mean
-        OFFSET=$(awk '{total+=$'$COL'} END {printf "%g",total/NR}' ${FILE_LIST[f]})
-        #append it to title
-        LEGEND+=" $OFFSET"
-      fi
-      PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $PS lw 2 lc $c")
-      #increment file-wise color if there's only one column
-      [ $NR_COL -eq 1 ] && c=$((c+1))
-    done
+    if $LATLON
+    then
+      for ((f=0;f<${#FILE_LIST[@]};f++))
+      do
+        if $DEMEAN
+        then
+          #compute the mean
+          OFFSET=$(awk '{total+=$'$COL'} END {printf "%g",total/NR}' ${FILE_LIST[f]})
+          #append it to title
+          LEGEND+=" $OFFSET"
+        fi
+        PLOT_ARGS+=("'${FILE_LIST[f]}' using $LON:$LAT:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $POINTSIZE lc palette")
+      done
+    else
+      #reset file-wise color if there's only one data column
+      [ $NR_COL -eq 1 ] && c=1 || c=$((c+1))
+      for ((f=0;f<${#FILE_LIST[@]};f++))
+      do
+        $DYNPS && PS=$(echo "scale=1;($N-$i)/$N*($MAX_POINTSIZE-$POINTSIZE)+$POINTSIZE"|bc) || PS=$POINTSIZE
+        OFFSET=0
+        LEGEND="$i ${FILE_LABELS[f]}"
+        if $DEMEAN
+        then
+          #compute the mean
+          OFFSET=$(awk '{total+=$'$COL'} END {printf "%g",total/NR}' ${FILE_LIST[f]})
+          #append it to title
+          LEGEND+=" $OFFSET"
+        fi
+        PLOT_ARGS+=("'${FILE_LIST[f]}' using $XDATA_CMD:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $PS lw 2 lc $c")
+        #increment file-wise color if there's only one column
+        [ $NR_COL -eq 1 ] && c=$((c+1))
+      done
+    fi
   ;;
   esac
 done
+
+$LATLON && PLOT_ARGS+=("\"${SHORELINE}\" u 1:2 w l lt -1 lw 1 notitle" )
 
 PLOT_CMD="\
 set autoscale
