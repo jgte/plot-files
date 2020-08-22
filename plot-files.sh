@@ -40,6 +40,7 @@ XLABEL=
 YLABEL=
 DEMEAN=false
 YRANGE=
+XRANGE=
 SET_KEY=default
 PLOT_STYLE=linespoints
 POINT_STYLE=1
@@ -146,7 +147,15 @@ do
     shift;  YRANGE="$1"
     if [[ "${YRANGE/:}" == "$YRANGE" ]]
     then
-      echo "ERROR: input -yrange=... must contain the character ':' separating the min and max values of the y-axis range."
+      echo "ERROR: input --y-range=... must contain the character ':' separating the min and max values of the y-axis range."
+      exit 3
+    fi
+  ;;
+  --x-range) #sets the limit of the x-axis range, defaults set whatever is set by gnuplot
+    shift;  XRANGE="$1"
+    if [[ "${XRANGE/:}" == "$XRANGE" ]]
+    then
+      echo "ERROR: input --x-range=... must contain the character ':' separating the min and max values of the x-axis range."
       exit 3
     fi
   ;;
@@ -281,6 +290,7 @@ then
   echo "terminal    : $TERMINAL"
   echo "size        : $SIZE"
   echo "yrange      : $YRANGE"
+  echo "xrange      : $XRANGE"
   echo "set-key     : $SET_KEY"
   echo "plot-style  : $PLOT_STYLE"
 fi
@@ -357,6 +367,14 @@ if [ ! -z "$YRANGE" ]
 then
   FMT_CMD+=(
     "set yrange [$YRANGE]"
+  )
+fi
+
+#enforce requested x-axis range
+if [ ! -z "$XRANGE" ]
+then
+  FMT_CMD+=(
+    "set xrange [$XRANGE]"
   )
 fi
 
