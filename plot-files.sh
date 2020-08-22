@@ -515,17 +515,17 @@ gnuplotInPipe () {
 set terminal x11 size $SIZE font \"$FONT\"
 $PLOT_CMD"
   (echo "Type 'quit' to exit" >&2)
-  prmpt 
+  prmpt
   while true; do
     read -er cmd
     if [ "$cmd" == 'quit' ]; then
       break
     fi
     echo "$cmd"
-    prmpt 
+    prmpt
   done
 }
-gnuplotInPipe $1 | gnuplot 
+gnuplotInPipe $1 | gnuplot
 else
 
 [ -d $(dirname "$OUT") ] || mkdir -p $(dirname "$OUT")
@@ -540,7 +540,7 @@ $DISPLAY_FLAG && display "$OUT" || echo "plotted $OUT"
 fi
 
 #cleanup
-if [ ! -z "$START" ] || [ ! -z "$LEN" ] 
+if [ ! -z "$START" ] || [ ! -z "$LEN" ]
 then
   rm -f /tmp/$(basename $BASH_SOURCE)*
 fi
