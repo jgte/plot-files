@@ -14,8 +14,6 @@ $(dirname $DIR)/plot-files.sh \
   --point-style 7 \
   $@
 
-exit
-
 DAT=$DIR/test.dat
 $(dirname $DIR)/plot-files.sh \
   --files $DAT \
