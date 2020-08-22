@@ -242,9 +242,9 @@ if __name__ == '__main__':
       stdcols+=(i,)  
   
   if parsed.debug:
-    print(f"tcol        : {tcol}")
-    print(f"dcols       : {dcols}")
-    print(f"stdcols     : {stdcols}")
+    print(f"tcol       : {tcol}")
+    print(f"dcols      : {dcols}")
+    print(f"stdcols    : {stdcols}")
   assert(tcol>=0),"Need one of the label entries to be 't'."
   show_timing('built column info')
 
