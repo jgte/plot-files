@@ -240,6 +240,9 @@ if __name__ == '__main__':
 
   if not parsed.html: plt.rcParams.update({'font.size': parsed.font_size[0]})
 
+  if parsed.psa:
+    if not parsed.x_label: parsed.x_label[0]='Hz'
+
   dcols=()
   tcol=-1
   stdcols=()
@@ -409,8 +412,8 @@ if __name__ == '__main__':
       if parsed.grid:    plt.grid()
       if parsed.y_label: plt.ylabel(parsed.y_label[0])
       if parsed.psa:
-        if not parsed.x_label: plt.xlabel('Hz')
-        else:                  plt.xlabel(parsed.x_label[0])
+        # if not parsed.x_label: plt.xlabel('Hz')
+        # else:                  plt.xlabel(parsed.x_label[0])
         plt.xscale('log')
       else:
         if parsed.x_label:    plt.xlabel(parsed.x_label[0])
@@ -425,6 +428,6 @@ if __name__ == '__main__':
       else:
         print(plotfilename)
         plt.savefig(plotfilename,bbox_inches='tight')
-        show_timing('plot saved to {f}'.format(f=plotfilename))
+        show_timing(f"plot saved to {plotfilenamef}")
         if parsed.debug:
           print("------------")
