@@ -424,13 +424,6 @@ if __name__ == '__main__':
           )
         else:
           plot_data[dataname].plot(label=dataname,color=clr[dataname])
-  # color="C"+str(ci)
-  # isxdates=parsed.x_date_format!="none")
-  # else:
-  #   if isxdates:
-  #     plt.plot_date(x,y,'-',label=l,color=color)
-  #   else:
-  #     plt.plot(x,y,label=l,color=color)
 
       fig.set_size_inches(parsed.width[0],parsed.height[0])
       #TODO: fix this
