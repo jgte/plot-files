@@ -380,7 +380,36 @@ if __name__ == '__main__':
 
   if isplotted:
     if parsed.html:
-      print("unfinished")
+      # Create new document with default CSS style
+      document = HTMLDocument()
+      # Set document title
+      document.set_title(parsed.title[0])
+      # gather plot data
+      pdat={}
+      for dataname in plot_data.keys():
+        show_timing(f"start plotting {dataname}")
+        if dataname[-4:]=="_std":
+          print("unfinished")
+        else:
+          # aggregate data into a data frame
+          pdat.update({dataname: plot_data[dataname]})
+      fig=px.line(
+        pd.DataFrame(pdat),
+      )
+      fig.update_layout(
+        title={'text': parsed.title[0], 'x': 0.5, 'xanchor': 'center'},
+        xaxis={'title': parsed.x_label[0]},
+        yaxis={'title': parsed.y_label[0]},
+        height=parsed.height[0]*96,
+        width =parsed.width[ 0]*96,
+        legend={'title': None},
+      )
+      document.add_plotly_figure(fig)
+      # Write to file
+      document.write(plotfilename)
+      show_timing(f"plot saved to {plotfilename}")
+      if parsed.debug:
+        print("------------")
     else:
       fig=plt.figure()
       for dataname in plot_data.keys():
