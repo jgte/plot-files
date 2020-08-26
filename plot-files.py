@@ -14,7 +14,7 @@ for d in [\
     sys.path.insert(1,d)
 import time_conversion as tc
 
-import numpy as np 
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 # import faulthandler; faulthandler.enable()
@@ -25,6 +25,9 @@ from datetime import datetime
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.ticker import LogFormatterMathtext
 import re
+import plotly.express as px
+from htmlcreator import HTMLDocument
+import pandas as pd
 
 mpl.rcParams['agg.path.chunksize'] = 10000
 
@@ -40,7 +43,7 @@ def split_results(results,typ):
   return x,y
 
 def gauss_window(width,dx):
-  x=np.linspace(-width/dx/2, width/dx/2, width/dx+1)
+  x=np.linspace(-width/dx/2, width/dx/2, int(width/dx+1))
   sigma=width/dx/3
   y=1/np.sqrt(2*np.pi*sigma**2) * np.exp(-(x**2)/(2*sigma**2))
   y=y/np.sum(y)
@@ -61,7 +64,8 @@ def xstep(x,max_iter=10):
     dx=reject_outliers(dx)
   return np.median(dx)
 
-def plot_wrapper(x,y,l,isabs,smooth_w,ispsa,color,isxdates):
+#converts x,y data into a pandas series
+def series_wrapper(x,y,isabs,smooth_w,ispsa):
   if isabs:
     y=np.abs(y)
   if smooth_w>0:
@@ -76,53 +80,51 @@ def plot_wrapper(x,y,l,isabs,smooth_w,ispsa,color,isxdates):
     dx=xstep(x)
     x,y = signal.welch(y,1/dx,nperseg=int(16*5000/xstep(x)),detrend='linear',scaling='spectrum',average='median')
     y=np.sqrt(y)
-  if isxdates:
-    plt.plot_date(x,y,'-',label=l,color=color)
-  else:
-    plt.plot(x,y,label=l,color=color)
+  return pd.Series(y,index=x)
+
 
 if __name__ == '__main__':
   # argument parsing
   parser = argparse.ArgumentParser(\
     epilog="")
   parser.add_argument('-f','--files', nargs='+', type=str, required=True,
-    help='files to plot') 
+    help='files to plot')
   parser.add_argument('-b','--labels', nargs=1, type=str, required=True,
     help='columns to plot from FILES : '\
     '"t" means abcissae, "-" ignores that column (use "\-" if the first column is to be ignored), '\
     '"std" plots the confidence interval over the previous timeseries '\
-    'and anything else is used to label the plot legend') 
+    'and anything else is used to label the plot legend')
   parser.add_argument('-F','--filelabels', nargs='+', type=str, required=False, default='',\
-    help='labels the FILES in the legend entries, defaults to the basename of FILES') 
+    help='labels the FILES in the legend entries, defaults to the basename of FILES')
   parser.add_argument('-S','--start', nargs=1, type=int, required=False, default=[0], \
-    help='plot only from this line onwards (not yet implemented)') 
+    help='plot only from this line onwards (not yet implemented)')
   parser.add_argument('-L','--len', nargs=1, type=int, required=False, default=[999999999999999], \
-    help='plot only this number of lines (not yet implemented)') 
+    help='plot only this number of lines (not yet implemented)')
   parser.add_argument('-o','--out', nargs=1, type=str, required=False,\
     help='filename of the resulting plot, defaults to FILES[.gGAUSS][.diff][.log][.psa].png; '\
     '"interactive" only shows the plot')
   parser.add_argument('-D','--debug', required=False, action='store_true', \
-    help='show debug info') 
+    help='show debug info')
   parser.add_argument('-d','--diff', required=False, action='store_true', \
-    help='plot the difference between the first two time series (all remaining time series are discarded)') 
+    help='plot the difference between the first two time series (all remaining time series are discarded)')
   parser.add_argument('-H','--height', nargs=1, type=float, required=False, default=[6], \
-    help='figure height in inches') 
+    help='figure height in inches')
   parser.add_argument('-W','--width', nargs=1, type=float, required=False, default=[18], \
-    help='figure width in inches') 
+    help='figure width in inches')
   parser.add_argument('-l','--logy', required=False, action='store_true', \
-    help='use logarithmic y-axis and plot absolute values') 
+    help='use logarithmic y-axis and plot absolute values')
   parser.add_argument('-T','--title', nargs=1, type=str, required=False, default='', \
-    help='add this string as plot title') 
+    help='add this string as plot title')
   parser.add_argument('-g','--gauss', nargs=1, type=float, required=False, default=[0], \
-    help='3-sigma width of the Gaussian smoothing window (same x-units as the t-column)') 
+    help='3-sigma width of the Gaussian smoothing window (same x-units as the t-column)')
   parser.add_argument('-p','--psa', required=False, action='store_true', \
-    help='plot power spectrum amplitude with scipy.signal.welch') 
+    help='plot power spectrum amplitude with scipy.signal.welch')
   parser.add_argument('-s','--start-x', nargs=1, type=float, required=False, default=[-999999999999999.0], \
     help='initial x value (same x-units as the t-column)')
   parser.add_argument('-e','--end-x', nargs=1, type=float, required=False, default=[999999999999999.0], \
     help='final x value (same x-units as the t-column)')
   parser.add_argument('-w','--widen', nargs=1, type=float, required=False, default=[0], \
-    help='add these many units of x-data to the start and end of the plot (only relevant when -s and/or -e are present)') 
+    help='add these many units of x-data to the start and end of the plot (only relevant when -s and/or -e are present)')
   parser.add_argument('-q','--x-date-format', nargs=1, type=str, required=False, default='none', \
     help='considers the "t" column as dates (uses matplotlib.pyplot.plot_date instead of matplotlib.pyplot.plot)')
   parser.add_argument('-z','--font-size', nargs=1, type=int, required=False, default=[12], \
@@ -134,15 +136,18 @@ if __name__ == '__main__':
   parser.add_argument('-G','--grid', required=False, action='store_true', \
     help='turn on the major tick grid')
   parser.add_argument('-K','--force', required=False, action='store_true', \
-    help='force replotting even if plot file is already available') 
+    help='force replotting even if plot file is already available')
   parser.add_argument('-t','--timing', required=False, action='store_true', \
-    help='show timing information') 
-  parser.add_argument('-','--get-supported-filetypes', required=False, action='store_true', \
+    help='show timing information')
+  parser.add_argument('--get-supported-filetypes', required=False, action='store_true', \
     help='show supported file types and exit')
+  parser.add_argument('--html', required=False, action='store_true', \
+    help='plot the data as an interactive html file, using plotly (https://plotly.com/graphing-libraries/)')
+
 
   #TODO: fix this
   # parser.add_argument('-n','--y-tick-fmt', nargs=1, type=str, required=False, default='{:.2f}', \
-  #   help='format of the tick labels for the y-axis')    
+  #   help='format of the tick labels for the y-axis')
 
   parsed = parser.parse_args()
 
@@ -177,21 +182,28 @@ if __name__ == '__main__':
     plotfilename=''
     for f in parsed.files:
       plotfilename+=os.path.basename(f)+'.'
-    if parsed.gauss[0]>0:
-      plotfilename+='g'+str(int(parsed.gauss[0]))+'.'
-    if parsed.diff:
-      plotfilename+='diff.'
-    if parsed.logy:
-      plotfilename+='logy.'
-    if parsed.psa:
-      plotfilename+='psa.'
-  if not os.path.splitext(plotfilename)[-1]:
-    plotfilename+='.png'
-  if not os.path.splitext(plotfilename)[-1][1:] in get_supported_filetypes:
-    print(f"WARNING: cannot handle extension {os.path.splitext(plotfilename)[-1]}, appending '.png'.")
-    plotfilename+='.png'
+    if parsed.gauss[0]>0: plotfilename+='g'+str(int(parsed.gauss[0]))+'.'
+    if parsed.diff:       plotfilename+='diff.'
+    if parsed.logy:       plotfilename+='logy.'
+    if parsed.psa:        plotfilename+='psa.'
+  if parsed.debug: print(f"plotfilename.1={plotfilename}")
+
+  extension=os.path.splitext(plotfilename)[-1]
+  if extension=='.':
+    plotfilename=plotfilename[0:-1]
+    extension=''
+  if not extension:
+    if parsed.html:
+      plotfilename+='.html'
+    else:
+      plotfilename+='.png'
+      if not os.path.splitext(plotfilename)[-1][1:] in get_supported_filetypes:
+        print(f"WARNING: cannot handle extension {os.path.splitext(plotfilename)[-1]}, appending '.png'.")
+        plotfilename+='.png'
+  if parsed.debug: print(f"plotfilename.2={plotfilename}")
+
   show_timing('built plotfilename')
-  
+
   labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
   show_timing('built labels')
 
@@ -226,7 +238,7 @@ if __name__ == '__main__':
     print("plot "+plotfilename+" already available, skipping...")
     sys.exit()
 
-  plt.rcParams.update({'font.size': parsed.font_size[0]})
+  if not parsed.html: plt.rcParams.update({'font.size': parsed.font_size[0]})
 
   dcols=()
   tcol=-1
@@ -239,8 +251,9 @@ if __name__ == '__main__':
     else:
       dcols+=(i,)
     if c=='std':
-      stdcols+=(i,)  
-  
+      if i<=1: raise Exception(f"If 'std' is given in --labels, it cannot be relative to the first column.")
+      stdcols+=(i,)
+
   if parsed.debug:
     print(f"tcol       : {tcol}")
     print(f"dcols      : {dcols}")
@@ -254,6 +267,9 @@ if __name__ == '__main__':
   ry=[]
   ri=0
   ci=0
+  clr={}
+  plot_data={}
+  plot_fill={}
   for fi,fn in enumerate(parsed.files):
     if isdone:
       continue
@@ -264,10 +280,16 @@ if __name__ == '__main__':
         continue
       x=[]
       y=[]
-      if len(parsed.files)==1:
-        dataname=labels[di]
+      if di in stdcols:
+        if len(parsed.files)==1:
+          dataname=labels[di-1]
+        else:
+          dataname=filelabels[fi]+' '+labels[di-1]
       else:
-        dataname=filelabels[fi]+' '+labels[di]
+        if len(parsed.files)==1:
+          dataname=labels[di]
+        else:
+          dataname=filelabels[fi]+' '+labels[di]
       for l in d:
         dl=re.split('[\t, ]+',l)
         # if parsed.debug:
@@ -295,29 +317,35 @@ if __name__ == '__main__':
       ry.append(y)
       if parsed.debug:
         print(f"ri={ri}")
-        print(f"rx[{labels[di]}]={rx[ri][0:3]}...{rx[ri][-3:]}")
-        print(f"ry[{labels[di]}]={ry[ri][0:3]}...{ry[ri][-3:]}")
-      
+        print(f"rx[{dataname}]={rx[ri][0:3]}...{rx[ri][-3:]}")
+        print(f"ry[{dataname}]={ry[ri][0:3]}...{ry[ri][-3:]}")
+
       #branch on type of data to plot
       if di in stdcols:
-        if parsed.debug:
-          print(f"ci={ci}")
-        #plot confidence interval
-        plt.fill_between(rx[ri],
-          (np.array(ry[ri-1])-2*np.array(ry[ri])).tolist(),
-          (np.array(ry[ri-1])+2*np.array(ry[ri])).tolist(),
-          color="C"+str(ci), alpha=.1)
+        if parsed.html:
+          print("NOTICE: 'std' columns not yet implemented for html plots")
+        else:
+          dataname=dataname+"_std"
+          clr[dataname]=f"C{ci}"
+          if parsed.debug:
+            print(f"clr[{dataname}]={clr[dataname]}")
+          #save confidence interval
+          plot_data[dataname]=[
+            pd.Series(np.array(ry[ri-1])-2*np.array(ry[ri]),index=rx[ri]),
+            pd.Series(np.array(ry[ri-1])+2*np.array(ry[ri]),index=rx[ri])
+          ]
       else:
-        #get line color index
+        #save line color index
         ci+=1
+        clr[dataname]=f"C{ci}"
         if parsed.debug:
-          print(f"ci={ci}")
-        #plot data
-        plot_wrapper(rx[ri],ry[ri],dataname,
-          parsed.logy,parsed.gauss[0],parsed.psa,
-          "C"+str(ci),parsed.x_date_format!="none")
-      
+            print(f"clr[{dataname}]={clr[dataname]}")
+        #get plot data
+        plot_data[dataname]=series_wrapper(rx[ri],ry[ri],parsed.logy,parsed.gauss[0],parsed.psa)
+
       if parsed.diff and ri==1:
+        #set datame
+        dataname="diff"
         # #get common time domain
         # xc=np.unique(np.concatenate((rx[0],rx[1])))
         #get intersection time domain
@@ -327,55 +355,76 @@ if __name__ == '__main__':
         ry1=interp1d(np.array(rx[1]),np.array(ry[1]))
         #computing residuals between both interpolated time domains
         res=ry0(xc)-ry1(xc)
-        #plot it
-        plot_wrapper(xc,res,'diff',
-          parsed.logy,parsed.gauss[0],parsed.psa,
-          "C"+str(ci),parsed.x_date_format!="none")
+        #save line color index
+        ci+=1
+        clr[dataname]=f"C{ci}"
+        if parsed.debug:
+          print(f"clr[{dataname}]={clr[dataname]}")
+        #save data
+        plot_data[dataname]=series_wrapper(xc,res,parsed.logy,parsed.gauss[0],parsed.psa)
+        # plot_wrapper(xc,res,'diff',
+        #   parsed.logy,parsed.gauss[0],parsed.psa,
+        #   "C"+str(ci),parsed.x_date_format!="none")
         if parsed.debug:
           print(f"rx[ diff ]={ xc[0:3]}...{ xc[-3:]}")
           print(f"ry[ diff ]={res[0:3]}...{res[-3:]}")
         #ignore remaining time series
         isdone=True
-        
+
       ri+=1
       isplotted=True
     show_timing('gathered data from {f}'.format(f=fn))
 
   if isplotted:
-    fig=plt.gcf()
-    fig.set_size_inches(parsed.width[0],parsed.height[0])
-    #TODO: fix this
-    # plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(parsed.y_tick_fmt[0].format))
-    # fmt=LogFormatterMathtext(labelOnlyBase=True)
-    # plt.gca().yaxis.set_major_formatter(fmt)
+    if parsed.html:
+      print("unfinished")
+    else:
+      fig=plt.figure()
+      for dataname in plot_data.keys():
+        show_timing(f"start plotting {dataname}")
+        if dataname[-4:]=="_std":
+          plt.fill_between(
+            plot_data[dataname][0].index,
+            plot_data[dataname][0],
+            plot_data[dataname][1],
+            color=clr[dataname],
+            alpha=.3
+          )
+        else:
+          plot_data[dataname].plot(label=dataname,color=clr[dataname])
+  # color="C"+str(ci)
+  # isxdates=parsed.x_date_format!="none")
+  # else:
+  #   if isxdates:
+  #     plt.plot_date(x,y,'-',label=l,color=color)
+  #   else:
+  #     plt.plot(x,y,label=l,color=color)
 
-    if parsed.grid:
-      # plt.grid(b=True, which='major', color='gray', linestyle='-')
-      plt.axes().grid()
-    if parsed.y_label:
-      plt.ylabel(parsed.y_label[0])
-    if parsed.psa:
-      if not parsed.x_label:
-        plt.xlabel('Hz')
+      fig.set_size_inches(parsed.width[0],parsed.height[0])
+      #TODO: fix this
+      # plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(parsed.y_tick_fmt[0].format))
+      # fmt=LogFormatterMathtext(labelOnlyBase=True)
+      # plt.gca().yaxis.set_major_formatter(fmt)
+
+      if parsed.grid:    plt.grid()
+      if parsed.y_label: plt.ylabel(parsed.y_label[0])
+      if parsed.psa:
+        if not parsed.x_label: plt.xlabel('Hz')
+        else:                  plt.xlabel(parsed.x_label[0])
+        plt.xscale('log')
       else:
-        plt.xlabel(parsed.x_label[0])
-      plt.xscale('log')
-    else:
-      if parsed.x_label:
-        plt.xlabel(parsed.x_label[0])
-      # plt.xlabel('time (from '+'{}'.format(rx[0][0])+' to '+'{}'.format(rx[0][-1])+')')
-      # plt.xlabel('time')
-    if parsed.logy:
-      plt.yscale('log')
-    if len(parsed.title)>0:
-      plt.title(parsed.title[0])
-    plt.legend()
-    if plotfilename=='interactive':
-      plt.show()
-      show_timing('plot shown')
-    else:
-      print(plotfilename)
-      plt.savefig(plotfilename,bbox_inches='tight')
-      show_timing('plot saved to {f}'.format(f=plotfilename))
-      if parsed.debug:
-        print("------------")
+        if parsed.x_label:    plt.xlabel(parsed.x_label[0])
+        # plt.xlabel('time (from '+'{}'.format(rx[0][0])+' to '+'{}'.format(rx[0][-1])+')')
+        # plt.xlabel('time')
+      if parsed.logy:         plt.yscale('log')
+      if len(parsed.title)>0: plt.title(parsed.title[0])
+      plt.legend()
+      if plotfilename=='interactive':
+        plt.show()
+        show_timing('plot shown')
+      else:
+        print(plotfilename)
+        plt.savefig(plotfilename,bbox_inches='tight')
+        show_timing('plot saved to {f}'.format(f=plotfilename))
+        if parsed.debug:
+          print("------------")
