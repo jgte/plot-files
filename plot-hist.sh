@@ -33,12 +33,12 @@ iC=0
 while [[ $# -gt 0 ]]
 do
   iC=$(( iC+1 ))
-  case "$1" in 
+  case "$1" in
     -x) #set -x bash option
       set -x
     ;;
     --files|-f) #define the file with the data
-      shift; cat "$1" | sort -g > $DATA_FILE 
+      shift; cat "$1" | sort -g > $DATA_FILE
     ;;
     --bsv-data) #define the histogram data as list of blank-separated values (bsv) and all arguments after this one are assumed to be the histogram values
       shift
@@ -61,10 +61,10 @@ do
       shift; OUTDIR="$1"
     ;;
     --debug|-D) #show some debug output
-      DEBUG=true 
+      DEBUG=true
     ;;
     --force) #delete plot file, if existing; by default no replotting is done
-      FORCE=true           
+      FORCE=true
     ;;
     --rm-outliers) #remove outliers before plotting
       RM_OUTLIERS=true
@@ -75,12 +75,12 @@ do
     --x-label|-X) #specify the x-axis label
       shift; XLABEL="$1"
     ;;
-    --logy|-l) #use logarithmic scale in the y-axis 
+    --logy|-l) #use logarithmic scale in the y-axis
       LOGY=true
     ;;
     --box-width) #define the width factor of the histogram bars, 1 means the bars have no gaps between them
       shift; BOXWIDTH="$1"
-    ;; 
+    ;;
     --terminal) #set the gnuplot terminal type, defaults to pngcairo
       shift; TERMINAL="$1"
     ;;
@@ -117,7 +117,7 @@ $BASH_SOURCE -f <(awk '{print \$3}' data.file) [ <options> ]
 
 All options:"
       $BASH_SOURCE --arguments
-      exit 
+      exit
     ;;
     *)
       echo "WARNING: ignoring argument '$1'"
@@ -145,7 +145,7 @@ $FORCE && rm -f $OUT
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
-  awk '{ printf("%.3g\n",$1)}' | \
+  awk '{ printf("%.9g\n",$1)}' | \
   sort -g > $DATA_FILE.tmp && \
   mv -f $DATA_FILE.tmp $DATA_FILE
 
@@ -182,7 +182,7 @@ function std(arr, sum2,c,i){
     }
   }
   for (i=0; i<l; i++) {
-    if ( v[i]!=0) printf("%.3g\n",v[i]) 
+    if ( v[i]!=0) printf("%.3g\n",v[i])
   }
 }' | \
   sort -g > $DATA_FILE.tmp && \
@@ -190,9 +190,29 @@ function std(arr, sum2,c,i){
 fi
 
 #getting plot parameters
-min=`head -n1 $DATA_FILE`
-max=`tail -n1 $DATA_FILE`
+min=$(printf "%9.3g" $(head -n1 $DATA_FILE))
+max=$(printf "%9.3g" $(tail -n1 $DATA_FILE))
 n=`cat $DATA_FILE | wc -l | sed 's: ::g'`
+STATS=$(awk '
+  function mean(arr, sum,c,i){
+    sum=0;c=0;
+    for (i in arr) { sum+=arr[i]; c++; }
+    return sum/c
+  }
+  function std(arr, sum2,c,i){
+    sum=0;sum2=0;c=0;
+    for (i in arr) { sum+=arr[i];sum2+=arr[i]*arr[i]; c++; }
+    return sqrt(sum2/c - ((sum/c)^2))
+  }
+  {
+  #load the data: always the first column (no exceptions)
+    v[NR-1]=$1;
+  } END {
+    printf("%9.3g %9.3g",mean(v),std(v))
+  }' $DATA_FILE
+)
+mean=${STATS% *}
+std=${STATS#* }
 case "$N_BINS" in
   ""|simple)
     n_bins=`echo "sqrt($n)" | bc`
@@ -255,7 +275,8 @@ set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
 $($LOGY && echo "set logscale y")
-set title "$TITLE" 
+set title "$TITLE"
+set label "count: $n\nmin: $min\nmax: $max\nmean: $mean\nstd: $std" at graph 0.8, graph 0.95 font "Corrier,16"
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"$BAR_COLOUR" notitle
 %
