@@ -83,8 +83,8 @@ def series_wrapper(x,y,isabs,smooth_w,ispsa):
   return pd.Series(y,index=x)
 
 #computes the mean of y, subtracts it from y, appends it as string to dataname
-def handle_mean(y,dataname,mean):
-  if parsed.demean:
+def handle_mean(y,dataname,mean,demean):
+  if demean:
     mean.append(np.mean(y))
     y=[yi-mean[-1] for yi in y]
     dataname=f"{dataname} {mean[-1]:9.3g}"
@@ -176,9 +176,10 @@ if __name__ == '__main__':
       print("Timinig : {str} : {sec} seconds".format(str=str,sec=(time.time() - start_time)))
 
   #handle incompatible arguments
-  if parsed.demean and parsed.psa:
+  demean=parsed.demean
+  if demean and parsed.psa:
     print("WARNING: --demean and --psa are incompatible, ignoring --demean")
-    parsed.demean=False
+    demean=False
 
   #NOTICE: this is here to make it possible to see which file types are supported in this system;
   if parsed.get_supported_filetypes:
@@ -210,7 +211,7 @@ if __name__ == '__main__':
     if parsed.logx:       plotfilename+='logx.'
     if parsed.logy:       plotfilename+='logy.'
     if parsed.psa:        plotfilename+='psa.'
-    if parsed.demean:     plotfilename+='demean.'
+    if demean:            plotfilename+='demean.'
   if parsed.debug: print(f"plotfilename.1={plotfilename}")
 
   extension=os.path.splitext(plotfilename)[-1]
@@ -351,7 +352,7 @@ if __name__ == '__main__':
         print(f"y={y[0:3]}...{y[-3:]}")
       if not di in stdcols:
         #compute mean if requested (branching inside this function)
-        y,dataname,mean=handle_mean(y,dataname,mean)
+        y,dataname,mean=handle_mean(y,dataname,mean,demean)
       #save data
       rx.append(x)
       ry.append(y)
@@ -398,8 +399,8 @@ if __name__ == '__main__':
         if parsed.debug:
           print(f"res[{dataname}]={res[0:3]}...{res[-3:]}")
         #compute mean if requested
-        if parsed.demean:
-          res,dataname,mean=handle_mean(res,dataname,mean)
+        if demean:
+          res,dataname,mean=handle_mean(res,dataname,mean,demean)
           if parsed.debug:
             print(f"res[{dataname}]={res[0:3]}...{res[-3:]}")
         #save line color index
