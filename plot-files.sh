@@ -508,9 +508,9 @@ set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
 $(printf '%s\n' "${FMT_CMD[@]:-}")
-set key $SET_KEY"
-
-  # https://github.com/Gnuplotting/gnuplot-palettes/blob/master/rdylbu.pal
+set key $SET_KEY
+"
+# https://github.com/Gnuplotting/gnuplot-palettes/blob/master/rdylbu.pal
 $LATLON && PLOT_CMD+="\
 # palette
 set palette defined (\\
