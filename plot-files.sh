@@ -502,8 +502,28 @@ set xlabel \"$XLABEL\"
 set ylabel \"$YLABEL\"
 set mouse mouseformat \"%f,%g\"
 $(printf '%s\n' "${FMT_CMD[@]:-}")
-set key $SET_KEY
-plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
+set key $SET_KEY"
+
+  # https://github.com/Gnuplotting/gnuplot-palettes/blob/master/rdylbu.pal
+$LATLON && PLOT_CMD+="\
+# palette
+set palette defined (\\
+1  '#67001f',\\
+2  '#b2182b',\\
+3  '#d6604d',\\
+4  '#f4a582',\\
+5  '#fddbc7',\\
+6  '#f7f7f7',\\
+7  '#d1e5f0',\\
+8  '#92c5de',\\
+9  '#4393c3',\\
+10 '#2166ac',\\
+11 '#053061')
+"
+
+['#b2182b','#ef8a62','#fddbc7','#f7f7f7','#d1e5f0','#67a9cf','#2166ac']
+
+PLOT_CMD+="plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
 
 #user feedback
 $DEBUG && echo "gnuplot cmd : $PLOT_CMD"
