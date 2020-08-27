@@ -156,6 +156,8 @@ if __name__ == '__main__':
     help='plot the data as an interactive html file, using plotly (https://plotly.com/graphing-libraries/)')
   parser.add_argument('--demean', required=False, action='store_true', \
     help='remove the mean from each time series before plotting and show the mean value in the legend entry')
+  parser.add_argument('--out-name', required=False, action='store_true', \
+    help='show the automatic name of the resulting plot and exit (nothing is plotted)')
 
 
   #TODO: fix this
@@ -223,6 +225,10 @@ if __name__ == '__main__':
   if parsed.debug: print(f"plotfilename.2={plotfilename}")
 
   show_timing('built plotfilename')
+
+  if parsed.out_name:
+    print(plotfilename)
+    exit()
 
   labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
   show_timing('built labels')
