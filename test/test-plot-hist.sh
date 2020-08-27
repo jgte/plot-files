@@ -9,6 +9,7 @@ $(dirname $DIR)/plot-hist.sh \
   --out $DIR/$(basename ${DAT%.dat})-plot-hist \
   --force --debug \
   --logy \
-  --stats-fmt '%.1e' \
-  --x-label "[m/s^2]" \
+  --stats-fmt '%.2f' \
+  --units 1e9 \
+  --x-label "[nm/s^2]" \
   $@

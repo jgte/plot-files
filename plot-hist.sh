@@ -30,6 +30,7 @@ FONT="arial,16"
 BAR_COLOUR="gray20"
 NOBORDER=false
 STATS_FMT='%.3g'
+UNITS=1
 iC=0
 while [[ $# -gt 0 ]]
 do
@@ -100,6 +101,9 @@ do
     --stats-fmt) #sets the numeric format for the stats shown in the plot, defaults to '%.3g'
       shift; STATS_FMT="$1"
     ;;
+    --units) #scale the data by this factor, in principle to match the units specified in --x-label, defaults to '1'
+      shift; UNITS="$1"
+    ;;
     --arguments) #shows all available modes and exit
       grep ') #' $BASH_SOURCE \
         | grep -v grep \
@@ -149,7 +153,7 @@ $FORCE && rm -f $OUT
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
-  awk '{ printf("%g\n",$1)}' | \
+  awk '{ printf("%.16g\n",$1*'$UNITS')}' | \
   sort -g > $DATA_FILE.tmp && \
   mv -f $DATA_FILE.tmp $DATA_FILE
 
@@ -186,7 +190,7 @@ function std(arr, sum2,c,i){
     }
   }
   for (i=0; i<l; i++) {
-    if ( v[i]!=0) printf("%g\n",v[i])
+    if ( v[i]!=0) printf("%.16g\n",v[i])
   }
 }' | \
   sort -g > $DATA_FILE.tmp && \
@@ -229,7 +233,7 @@ STATS=$(awk '
   #load the data: always the first column (no exceptions)
     v[NR-1]=$1;
   } END {
-    printf("%g %g",mean(v),std(v))
+    printf("%.16g %.16g",mean(v),std(v))
   }' $DATA_FILE
 )
 mean=${STATS% *}
@@ -279,7 +283,7 @@ set output "$OUT"
 set yrange [0:]
 set boxwidth width*$BOXWIDTH
 set style fill transparent solid 0.5 $($NOBORDER && echo noborder)	#fillstyle
-set format x "%.2g"
+set format x "%.3g"
 set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
