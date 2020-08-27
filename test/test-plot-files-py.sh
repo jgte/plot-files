@@ -41,6 +41,7 @@ $(dirname $DIR)/plot-files.py \
   --timing \
   --psa \
   --logy \
+  --logx \
   $@
 
 # --diff test

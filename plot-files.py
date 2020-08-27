@@ -124,6 +124,8 @@ if __name__ == '__main__':
     help='figure width in inches')
   parser.add_argument('-l','--logy', required=False, action='store_true', \
     help='use logarithmic y-axis and plot absolute values')
+  parser.add_argument('--logx', required=False, action='store_true', \
+    help='use logarithmic x-axis')
   parser.add_argument('-T','--title', nargs=1, type=str, required=False, default='', \
     help='add this string as plot title')
   parser.add_argument('-g','--gauss', nargs=1, type=float, required=False, default=[0], \
@@ -205,6 +207,7 @@ if __name__ == '__main__':
       plotfilename+=os.path.basename(f)+'.'
     if parsed.gauss[0]>0: plotfilename+='g'+str(int(parsed.gauss[0]))+'.'
     if parsed.diff:       plotfilename+='diff.'
+    if parsed.logx:       plotfilename+='logx.'
     if parsed.logy:       plotfilename+='logy.'
     if parsed.psa:        plotfilename+='psa.'
     if parsed.demean:     plotfilename+='demean.'
@@ -474,14 +477,11 @@ if __name__ == '__main__':
 
       if parsed.grid:    plt.grid()
       if parsed.y_label: plt.ylabel(parsed.y_label[0])
-      if parsed.psa:
-        # if not parsed.x_label: plt.xlabel('Hz')
-        # else:                  plt.xlabel(parsed.x_label[0])
-        plt.xscale('log')
       else:
         if parsed.x_label:    plt.xlabel(parsed.x_label[0])
         # plt.xlabel('time (from '+'{}'.format(rx[0][0])+' to '+'{}'.format(rx[0][-1])+')')
         # plt.xlabel('time')
+      if parsed.logx:         plt.xscale('log')
       if parsed.logy:         plt.yscale('log')
       if len(parsed.title)>0: plt.title(parsed.title[0])
       plt.legend()
