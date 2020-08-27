@@ -190,15 +190,6 @@ if __name__ == '__main__':
   #NOTICE: plt.gcf().canvas.get_supported_filetypes().keys() is not evaluated every time this script is run because it is very slow in some systems
   get_supported_filetypes=['eps', 'jpg', 'jpeg', 'pdf', 'pgf', 'png', 'ps', 'raw', 'rgba', 'svg', 'svgz', 'tif', 'tiff']
 
-
-  #default file labels
-  filelabels=[]
-  for f in parsed.files:
-    filelabels.append(os.path.basename(f))
-  if len(parsed.filelabels)>0:
-    filelabels=parsed.filelabels
-  show_timing('built filelabels')
-
   #build plot filename
   try:
     plotfilename=parsed.out[0]
@@ -212,8 +203,7 @@ if __name__ == '__main__':
     if parsed.logy:       plotfilename+='logy.'
     if parsed.psa:        plotfilename+='psa.'
     if demean:            plotfilename+='demean.'
-  if parsed.debug: print(f"plotfilename.1={plotfilename}")
-
+  #handle extension
   extension=os.path.splitext(plotfilename)[-1]
   if extension=='.':
     plotfilename=plotfilename[0:-1]
@@ -226,17 +216,32 @@ if __name__ == '__main__':
       if not os.path.splitext(plotfilename)[-1][1:] in get_supported_filetypes:
         print(f"WARNING: cannot handle extension {os.path.splitext(plotfilename)[-1]}, appending '.png'.")
         plotfilename+='.png'
-  if parsed.debug: print(f"plotfilename.2={plotfilename}")
-
-  show_timing('built plotfilename')
-
+  #maybe only show the filename
   if parsed.out_name:
     print(plotfilename)
     exit()
+  #avoid re-plotting
+  if os.path.isfile(plotfilename) and not parsed.force:
+    print("plot "+plotfilename+" already available, skipping...")
+    sys.exit()
+  #inform
+  show_timing('built plotfilename')
 
+  #default file labels
+  filelabels=[]
+  for f in parsed.files:
+    filelabels.append(os.path.basename(f))
+  if len(parsed.filelabels)>0:
+    filelabels=parsed.filelabels
+  #inform
+  show_timing('built filelabels')
+
+  #build labels
   labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
+  #inform
   show_timing('built labels')
 
+  #parse x/y-labels
   if parsed.x_label:
     x_label=parsed.x_label[0]
   else:
@@ -246,12 +251,12 @@ if __name__ == '__main__':
     else:
       print(x_label)
       exit()
-
   if parsed.y_label:
     y_label=parsed.y_label[0]
   else:
     y_label=''
 
+  #inform
   if parsed.debug:
     print("files:     :")
     print('\n'.join(parsed.files))
@@ -280,10 +285,6 @@ if __name__ == '__main__':
     print(f"html       : {parsed.html}")
     print(f"demean     : {demean}")
     # print(f"y-tick-fmt : {parsed.y_tick_fmt}")
-
-  if os.path.isfile(plotfilename) and not parsed.force:
-    print("plot "+plotfilename+" already available, skipping...")
-    sys.exit()
 
   if not parsed.html: plt.rcParams.update({'font.size': parsed.font_size[0]})
 
