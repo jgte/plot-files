@@ -82,6 +82,17 @@ def series_wrapper(x,y,isabs,smooth_w,ispsa):
     y=np.sqrt(y)
   return pd.Series(y,index=x)
 
+#computes the mean of y, subtracts it from y, appends it as string to dataname
+def handle_mean(y,dataname,mean):
+  if parsed.demean:
+    mean.append(np.mean(y))
+    y=[yi-mean[-1] for yi in y]
+    dataname=f"{dataname} {mean[-1]}"
+  else:
+    mean.append(0)
+  if parsed.debug:
+    print(f"mean={mean[-1]}")
+  return y,dataname,mean
 
 if __name__ == '__main__':
   # argument parsing
@@ -143,6 +154,8 @@ if __name__ == '__main__':
     help='show supported file types and exit')
   parser.add_argument('--html', required=False, action='store_true', \
     help='plot the data as an interactive html file, using plotly (https://plotly.com/graphing-libraries/)')
+  parser.add_argument('--demean', required=False, action='store_true', \
+    help='remove the mean from each time series before plotting and show the mean value in the legend entry')
 
 
   #TODO: fix this
@@ -151,11 +164,17 @@ if __name__ == '__main__':
 
   parsed = parser.parse_args()
 
+  #setup timing infrastructure
   if parsed.timing:
     start_time=time.time()
   def show_timing(str):
     if parsed.timing:
       print("Timinig : {str} : {sec} seconds".format(str=str,sec=(time.time() - start_time)))
+
+  #handle incompatible arguments
+  if parsed.demean and parsed.psa:
+    print("WARNING: --demean and --psa are incompatible, ignoring --demean")
+    parsed.demean=False
 
   #NOTICE: this is here to make it possible to see which file types are supported in this system;
   if parsed.get_supported_filetypes:
@@ -186,6 +205,7 @@ if __name__ == '__main__':
     if parsed.diff:       plotfilename+='diff.'
     if parsed.logy:       plotfilename+='logy.'
     if parsed.psa:        plotfilename+='psa.'
+    if parsed.demean:     plotfilename+='demean.'
   if parsed.debug: print(f"plotfilename.1={plotfilename}")
 
   extension=os.path.splitext(plotfilename)[-1]
@@ -232,6 +252,8 @@ if __name__ == '__main__':
     print(f"grid       : {parsed.grid}")
     print(f"force      : {parsed.force}")
     print(f"timing     : {parsed.timing}")
+    print(f"html       : {parsed.html}")
+    print(f"demean     : {parsed.demean}")
     # print(f"y-tick-fmt : {parsed.y_tick_fmt}")
 
   if os.path.isfile(plotfilename) and not parsed.force:
@@ -273,6 +295,7 @@ if __name__ == '__main__':
   clr={}
   plot_data={}
   plot_fill={}
+  mean=[]
   for fi,fn in enumerate(parsed.files):
     if isdone:
       continue
@@ -293,6 +316,7 @@ if __name__ == '__main__':
           dataname=labels[di]
         else:
           dataname=filelabels[fi]+' '+labels[di]
+      #loop over the data
       for l in d:
         dl=re.split('[\t, ]+',l)
         # if parsed.debug:
@@ -316,6 +340,10 @@ if __name__ == '__main__':
       if parsed.debug:
         print(f"x={x[0:3]}...{x[-3:]}")
         print(f"y={y[0:3]}...{y[-3:]}")
+      if not di in stdcols:
+        #compute mean if requested (branching inside this function)
+        y,dataname,mean=handle_mean(y,dataname,mean)
+      #save data
       rx.append(x)
       ry.append(y)
       if parsed.debug:
@@ -357,7 +385,14 @@ if __name__ == '__main__':
         ry0=interp1d(np.array(rx[0]),np.array(ry[0]))
         ry1=interp1d(np.array(rx[1]),np.array(ry[1]))
         #computing residuals between both interpolated time domains
-        res=ry0(xc)-ry1(xc)
+        res=ry0(xc)+mean[0]-ry1(xc)-mean[1]
+        if parsed.debug:
+          print(f"res[{dataname}]={res[0:3]}...{res[-3:]}")
+        #compute mean if requested
+        if parsed.demean:
+          res,dataname,mean=handle_mean(res,dataname,mean)
+          if parsed.debug:
+            print(f"res[{dataname}]={res[0:3]}...{res[-3:]}")
         #save line color index
         ci+=1
         clr[dataname]=f"C{ci}"
