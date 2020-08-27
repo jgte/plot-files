@@ -491,6 +491,6 @@ if __name__ == '__main__':
       else:
         print(plotfilename)
         plt.savefig(plotfilename,bbox_inches='tight')
-        show_timing(f"plot saved to {plotfilenamef}")
+        show_timing(f"plot saved to {plotfilename}")
         if parsed.debug:
           print("------------")
