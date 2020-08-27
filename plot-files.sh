@@ -162,7 +162,7 @@ do
   ;;
   --set-key) #sets location of the legend; one of left, right, top, bottom, center, inside, outside, lmargin, rmargin, tmargin, bmargin
     shift
-    SET_KEY="$1"
+    SET_KEY="${1//_/ }"
   ;;
   --plot-style) #sets the plot style; one of lines, points, linespoints, impulses, dots, steps, errorbars, yerrorbars, xerrorbars, xyerrorbars, boxes, boxerrorbars, or boxxyerrorbars
     shift
@@ -332,13 +332,15 @@ do
   esac
 done
 
-#sanity
+#sanity and set the LATLON flag
 if [ ! -z "$LAT" ] && [ ! -z "$LON" ]
 then
   $DEBUG && echo "Producing latitude and longitude plot with domain defined in columns $LAT and $LON, respectively"
   LATLON=true
-  [ -z "$XLABEL" ] && XLABEL="longitude [deg]"
-  [ -z "$YLABEL" ] && YLABEL="latitude [deg]"
+  [ "$SET_KEY" == "default" ] && SET_KEY="outside bottom center"
+  echo "SET_KEY=$SET_KEY"
+  # [ -z "$XLABEL" ] && XLABEL="longitude [deg]"
+  # [ -z "$YLABEL" ] && YLABEL="latitude [deg]"
 elif [ ! -z "$LAT" ] || [ ! -z "$LON" ]
 then
   echo "ERROR: in the comma-separated list of columns in -labels=..., if one entry is 'lat', then also need another entry to be 'lon'"
