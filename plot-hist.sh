@@ -29,6 +29,7 @@ SIZE="1200,900"
 FONT="arial,16"
 BAR_COLOUR="gray20"
 NOBORDER=false
+STATS_FMT='%.3g'
 iC=0
 while [[ $# -gt 0 ]]
 do
@@ -96,6 +97,9 @@ do
     --no-border) #turns off the outline of the bars
       NOBORDER=true
     ;;
+    --stats-fmt) #sets the numeric format for the stats shown in the plot, defaults to '%.3g'
+      shift; STATS_FMT="$1"
+    ;;
     --arguments) #shows all available modes and exit
       grep ') #' $BASH_SOURCE \
         | grep -v grep \
@@ -145,7 +149,7 @@ $FORCE && rm -f $OUT
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
-  awk '{ printf("%.9g\n",$1)}' | \
+  awk '{ printf("%g\n",$1)}' | \
   sort -g > $DATA_FILE.tmp && \
   mv -f $DATA_FILE.tmp $DATA_FILE
 
@@ -231,7 +235,7 @@ STATS=$(awk '
 mean=${STATS% *}
 std=${STATS#* }
 
-STATS_STR=$(printf "count: %i\\\\nmin: %.3g\\\\nmax: %.3g\\\\nmean: %.3g\\\\nstd: %.3g" $n $min $max $mean $std)
+STATS_STR=$(printf "count: %i\\\\nmin: $STATS_FMT\\\\nmax: $STATS_FMT\\\\nmean: $STATS_FMT\\\\nstd: $STATS_FMT" $n $min $max $mean $std)
 
 $DEBUG && echo -e "\
 Input arguments:
@@ -249,6 +253,7 @@ size        : $SIZE
 font        : $FONT
 bar-colour  : $BAR_COLOUR
 no-border   : $NOBORDER
+stats-fmt   : $STATS_FMT
 
 Some internal parameters:
 w/bin  : $(echo "$max $min $n_bins" | awk '{print ($1-$2)/$3}')
