@@ -283,7 +283,7 @@ set output "$OUT"
 set yrange [0:]
 set boxwidth width*$BOXWIDTH
 set style fill transparent solid 0.5 $($NOBORDER && echo noborder)	#fillstyle
-set format x "%.3g"
+# set format x "%.3g"
 set tics out nomirror
 $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
