@@ -270,6 +270,12 @@ fi
 
 #enforce force
 $FORCE && rm -f $OUT
+#skip if plot is already available
+if [ -e "$OUT" ]
+then
+ echo "plot $OUT already available, skipping..."
+ exit
+fi
 
 if ! $QUIET
 then

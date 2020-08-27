@@ -150,6 +150,12 @@ OUT=${OUT%\.$EXT}.$EXT
 
 #enforce force
 $FORCE && rm -f $OUT
+#skip if plot is already available
+if [ -e "$OUT" ]
+then
+ echo "plot $OUT already available, skipping..."
+ exit
+fi
 
 #sorting and using gnuplot number formatting
 cat $DATA_FILE | \
