@@ -182,7 +182,7 @@ function std(arr, sum2,c,i){
     }
   }
   for (i=0; i<l; i++) {
-    if ( v[i]!=0) printf("%.3g\n",v[i])
+    if ( v[i]!=0) printf("%g\n",v[i])
   }
 }' | \
   sort -g > $DATA_FILE.tmp && \
@@ -190,8 +190,8 @@ function std(arr, sum2,c,i){
 fi
 
 #getting plot parameters
-min=$(printf "%9.3g" $(head -n1 $DATA_FILE))
-max=$(printf "%9.3g" $(tail -n1 $DATA_FILE))
+min=$(head -n1 $DATA_FILE)
+max=$(tail -n1 $DATA_FILE)
 n=`cat $DATA_FILE | wc -l | sed 's: ::g'`
 
 case "$N_BINS" in
@@ -225,13 +225,13 @@ STATS=$(awk '
   #load the data: always the first column (no exceptions)
     v[NR-1]=$1;
   } END {
-    printf("%9.3g %9.3g",mean(v),std(v))
+    printf("%g %g",mean(v),std(v))
   }' $DATA_FILE
 )
 mean=${STATS% *}
 std=${STATS#* }
 
-STATS_STR="count: $n\nmin: $min\nmax: $max\nmean: $mean\nstd: $std"
+STATS_STR=$(printf "count: %i\\\\nmin: %.3g\\\\nmax: %.3g\\\\nmean: %.3g\\\\nstd: %.3g" $n $min $max $mean $std)
 
 $DEBUG && echo -e "\
 Input arguments:
