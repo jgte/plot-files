@@ -34,7 +34,6 @@ $(dirname $DIR)/plot-files.py \
   --files $DAT \
   --labels "\-,-,t,-,x,y,z,-" \
   --title "Calibrated acc GRACE-A 2008-08-01 arc-01" \
-  --x-label "seconds of day" \
   --y-label "[m/s^2]" \
   --grid \
   --debug \

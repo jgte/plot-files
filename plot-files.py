@@ -237,6 +237,21 @@ if __name__ == '__main__':
   labels=[i.replace('\\-','-') for i in parsed.labels[0].split(',')]
   show_timing('built labels')
 
+  if parsed.x_label:
+    x_label=parsed.x_label[0]
+  else:
+    x_label=''
+  if parsed.psa:
+    if not x_label: x_label='Hz'
+    else:
+      print(x_label)
+      exit()
+
+  if parsed.y_label:
+    y_label=parsed.y_label[0]
+  else:
+    y_label=''
+
   if parsed.debug:
     print("files:     :")
     print('\n'.join(parsed.files))
@@ -257,13 +272,13 @@ if __name__ == '__main__':
     print(f"stop-x     : {parsed.end_x}")
     print(f"widen      : {parsed.widen}")
     print(f"font-size  : {parsed.font_size}")
-    print(f"x-label    : {parsed.x_label}")
-    print(f"y-label    : {parsed.y_label}")
+    print(f"x-label    : {x_label}")
+    print(f"y-label    : {y_label}")
     print(f"grid       : {parsed.grid}")
     print(f"force      : {parsed.force}")
     print(f"timing     : {parsed.timing}")
     print(f"html       : {parsed.html}")
-    print(f"demean     : {parsed.demean}")
+    print(f"demean     : {demean}")
     # print(f"y-tick-fmt : {parsed.y_tick_fmt}")
 
   if os.path.isfile(plotfilename) and not parsed.force:
@@ -271,9 +286,6 @@ if __name__ == '__main__':
     sys.exit()
 
   if not parsed.html: plt.rcParams.update({'font.size': parsed.font_size[0]})
-
-  if parsed.psa:
-    if not parsed.x_label: parsed.x_label[0]='Hz'
 
   dcols=()
   tcol=-1
@@ -443,8 +455,8 @@ if __name__ == '__main__':
       )
       fig.update_layout(
         title={'text': parsed.title[0], 'x': 0.5, 'xanchor': 'center'},
-        xaxis={'title': parsed.x_label[0]},
-        yaxis={'title': parsed.y_label[0]},
+        xaxis={'title': x_label},
+        yaxis={'title': y_label},
         height=parsed.height[0]*96,
         width =parsed.width[ 0]*96,
         legend={'title': None},
@@ -477,13 +489,10 @@ if __name__ == '__main__':
       # plt.gca().yaxis.set_major_formatter(fmt)
 
       if parsed.grid:    plt.grid()
-      if parsed.y_label: plt.ylabel(parsed.y_label[0])
-      else:
-        if parsed.x_label:    plt.xlabel(parsed.x_label[0])
-        # plt.xlabel('time (from '+'{}'.format(rx[0][0])+' to '+'{}'.format(rx[0][-1])+')')
-        # plt.xlabel('time')
-      if parsed.logx:         plt.xscale('log')
-      if parsed.logy:         plt.yscale('log')
+      if y_label:        plt.ylabel(y_label)
+      if x_label:        plt.xlabel(x_label)
+      if parsed.logx:    plt.xscale('log')
+      if parsed.logy:    plt.yscale('log')
       if len(parsed.title)>0: plt.title(parsed.title[0])
       plt.legend()
       if plotfilename=='interactive':
