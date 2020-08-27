@@ -526,9 +526,6 @@ set palette defined (\\
 10 '#2166ac',\\
 11 '#053061')
 "
-
-['#b2182b','#ef8a62','#fddbc7','#f7f7f7','#d1e5f0','#67a9cf','#2166ac']
-
 PLOT_CMD+="plot $(printf '%s,' "${PLOT_ARGS[@]:-}")"
 
 #user feedback
