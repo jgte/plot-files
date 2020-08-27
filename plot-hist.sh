@@ -193,6 +193,23 @@ fi
 min=$(printf "%9.3g" $(head -n1 $DATA_FILE))
 max=$(printf "%9.3g" $(tail -n1 $DATA_FILE))
 n=`cat $DATA_FILE | wc -l | sed 's: ::g'`
+
+case "$N_BINS" in
+  ""|simple)
+    n_bins=`echo "sqrt($n)" | bc`
+  ;;
+  # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
+  Freedman-Diaconis|FD)
+    echo "ERROR: implementation needed"
+  ;;
+  *)
+    n_bins=$N_BINS
+  ;;
+esac
+[ -z "$TITLE" ] && TITLE="data points=$n, sum=$(
+cat $DATA_FILE | awk '{ SUM += $1} END { printf("%g",SUM) }'
+)"
+
 STATS=$(awk '
   function mean(arr, sum,c,i){
     sum=0;c=0;
@@ -213,23 +230,10 @@ STATS=$(awk '
 )
 mean=${STATS% *}
 std=${STATS#* }
-case "$N_BINS" in
-  ""|simple)
-    n_bins=`echo "sqrt($n)" | bc`
-  ;;
-  # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
-  Freedman-Diaconis|FD)
-    echo "ERROR: implementation needed"
-  ;;
-  *)
-    n_bins=$N_BINS
-  ;;
-esac
-[ -z "$TITLE" ] && TITLE="data points=$n, sum=$(
-cat $DATA_FILE | awk '{ SUM += $1} END { printf("%g",SUM) }'
-)"
 
-$DEBUG && echo "\
+STATS_STR="count: $n\nmin: $min\nmax: $max\nmean: $mean\nstd: $std"
+
+$DEBUG && echo -e "\
 Input arguments:
 files       : $DATA_FILE
 title       : $TITLE
@@ -247,13 +251,13 @@ bar-colour  : $BAR_COLOUR
 no-border   : $NOBORDER
 
 Some internal parameters:
-min    : $min
-max    : $max
-n      : $n
 w/bin  : $(echo "$max $min $n_bins" | awk '{print ($1-$2)/$3}')
 x_min  : $(echo "$max $min" | awk '{print $2-($1-$2)*0.05}')
 x_max  : $(echo "$max $min" | awk '{print $1-($1-$2)*0.05}')
 xtics  : $(echo "$max $min" | awk '{print ($1-$2)/5}')
+
+Some statistics:
+$STATS_STR
 "
 
 gnuplot <<%
@@ -276,7 +280,7 @@ $([ -z "$XLABEL" ] || echo "set xlabel \"$XLABEL\"")
 set ylabel "count"
 $($LOGY && echo "set logscale y")
 set title "$TITLE"
-set label "count: $n\nmin: $min\nmax: $max\nmean: $mean\nstd: $std" at graph 0.8, graph 0.95 font "Corrier,16"
+set label "$STATS_STR" at graph 0.8, graph 0.95 font "Corrier,16"
 #count and plot
 plot "$DATA_FILE" u (hist(\$1,width)):(1.0) smooth freq w boxes lc rgb"$BAR_COLOUR" notitle
 %
