@@ -87,7 +87,7 @@ def handle_mean(y,dataname,mean):
   if parsed.demean:
     mean.append(np.mean(y))
     y=[yi-mean[-1] for yi in y]
-    dataname=f"{dataname} {mean[-1]}"
+    dataname=f"{dataname} {mean[-1]:9.3g}"
   else:
     mean.append(0)
   if parsed.debug:
