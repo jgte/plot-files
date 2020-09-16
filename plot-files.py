@@ -5,6 +5,7 @@ import time
 import sys
 import collections
 import argparse
+import math
 
 for d in [\
   os.path.expanduser(os.path.join('~','utils','plot-l1b')),\
@@ -65,7 +66,7 @@ def xstep(x,max_iter=10):
   return np.median(dx)
 
 #converts x,y data into a pandas series
-def series_wrapper(x,y,isabs,smooth_w,ispsa):
+def series_wrapper(x,y,isabs,smooth_w,isasd,asd_method,asd_window_name,asd_window_width):
   if isabs:
     y=np.abs(y)
   if smooth_w>0:
@@ -76,9 +77,16 @@ def series_wrapper(x,y,isabs,smooth_w,ispsa):
       print(f"gauss width: {smooth_w}")
       # print(f"gauss coeff: {w}")
     y=np.convolve(y,w,'same')
-  if ispsa:
-    dx=xstep(x)
-    x,y = signal.welch(y,1/dx,nperseg=int(16*5000/xstep(x)),detrend='linear',scaling='spectrum',average='median')
+  if isasd:
+    dx=1/xstep(x)
+    if asd_method=='periodogram':
+      x,y = signal.periodogram(y,dx,asd_window_name,detrend='linear',scaling='density',return_onesided=True)
+    if asd_method=='welch':
+      x,y = signal.welch(      y,dx,asd_window_name,nperseg=int(asd_window_width*len(x)),detrend='linear',scaling='density',return_onesided=True)
+    if asd_method=='lombscargle':
+      f = np.logspace(math.log10(1/2/(x[-1]-x[1])/2/np.pi),math.log10(1/2/dx/2/np.pi),len(x))
+      y = signal.lombscargle(x,y,f)
+      x = f*2*np.pi
     y=np.sqrt(y)
   return pd.Series(y,index=x)
 
@@ -112,7 +120,7 @@ if __name__ == '__main__':
   parser.add_argument('-L','--len', nargs=1, type=int, required=False, default=[999999999999999], \
     help='plot only this number of lines (not yet implemented)')
   parser.add_argument('-o','--out', nargs=1, type=str, required=False,\
-    help='filename of the resulting plot, defaults to FILES[.gGAUSS][.diff][.log][.psa].png; '\
+    help='filename of the resulting plot, defaults to FILES[.gGAUSS][.diff][.log][.asd].png; '\
     '"interactive" only shows the plot')
   parser.add_argument('-D','--debug', required=False, action='store_true', \
     help='show debug info')
@@ -130,8 +138,14 @@ if __name__ == '__main__':
     help='add this string as plot title')
   parser.add_argument('-g','--gauss', nargs=1, type=float, required=False, default=[0], \
     help='3-sigma width of the Gaussian smoothing window (same x-units as the t-column)')
-  parser.add_argument('-p','--psa', required=False, action='store_true', \
-    help='plot power spectrum amplitude with scipy.signal.welch')
+  parser.add_argument('-p','--asd', required=False, action='store_true', \
+    help='plot one-sided amplitude spectrum density [units/sqrt(Hz)] with one of the methods defined in --asd-method (the data is detrended beforehand)')
+  parser.add_argument('--asd-method', nargs=1, type=str, required=False, default=['welch'],choices=['periodogram','welch','lombscargle'], \
+    help='method to compute the amplitude spectrum density')
+  parser.add_argument('--asd-window-name', nargs=1, type=str, required=False, default=['hann'], \
+    help='window name, as defined in scipy.signal.get_window (irrelevant to lombscargle)')
+  parser.add_argument('--asd-window-width', nargs=1, type=float, required=False, default=[0.1], \
+    help='window width, as fraction of complete data period (only relevant to welch)')
   parser.add_argument('-s','--start-x', nargs=1, type=float, required=False, default=[-999999999999999.0], \
     help='initial x value (same x-units as the t-column)')
   parser.add_argument('-e','--end-x', nargs=1, type=float, required=False, default=[999999999999999.0], \
@@ -177,8 +191,8 @@ if __name__ == '__main__':
 
   #handle incompatible arguments
   demean=parsed.demean
-  if demean and parsed.psa:
-    print("WARNING: --demean and --psa are incompatible, ignoring --demean")
+  if demean and parsed.asd:
+    print("WARNING: --demean and --asd are incompatible, ignoring --demean")
     demean=False
 
   #NOTICE: this is here to make it possible to see which file types are supported in this system;
@@ -197,12 +211,17 @@ if __name__ == '__main__':
     plotfilename=''
     for f in parsed.files:
       plotfilename+=os.path.basename(f)+'.'
-    if parsed.gauss[0]>0: plotfilename+='g'+str(int(parsed.gauss[0]))+'.'
+    if parsed.gauss[0]>0: plotfilename+=f"g{str(int(parsed.gauss[0]))}."
     if parsed.diff:       plotfilename+='diff.'
     if parsed.logx:       plotfilename+='logx.'
     if parsed.logy:       plotfilename+='logy.'
-    if parsed.psa:        plotfilename+='psa.'
     if demean:            plotfilename+='demean.'
+    if parsed.asd:
+      plotfilename+=f"{parsed.asd_method[0]}."
+      if not parsed.asd_method[0]=="lombscargle":
+        plotfilename+=f"{parsed.asd_window_name[0]}."
+        if parsed.asd_method[0]=="welch":
+          plotfilename+=f"{parsed.asd_window_width[0]}."
   #handle extension
   extension=os.path.splitext(plotfilename)[-1]
   if extension=='.':
@@ -246,7 +265,7 @@ if __name__ == '__main__':
     x_label=parsed.x_label[0]
   else:
     x_label=''
-  if parsed.psa:
+  if parsed.asd:
     if not x_label: x_label='Hz'
     else:
       print(x_label)
@@ -272,7 +291,10 @@ if __name__ == '__main__':
     print(f"logy       : {parsed.logy}")
     print(f"title      : {parsed.title}")
     print(f"gauss      : {parsed.gauss}")
-    print(f"psa        : {parsed.psa}")
+    print(f"asd        : {parsed.asd}")
+    print(f"asd method : {parsed.asd_method[0]}")
+    print(f"asd w name : {parsed.asd_window_name[0]}")
+    print(f"asd w width: {parsed.asd_window_width}")
     print(f"start-x    : {parsed.start_x}")
     print(f"stop-x     : {parsed.end_x}")
     print(f"widen      : {parsed.widen}")
@@ -395,7 +417,9 @@ if __name__ == '__main__':
         if parsed.debug:
             print(f"clr[{dataname}]={clr[dataname]}")
         #get plot data
-        plot_data[dataname]=series_wrapper(rx[ri],ry[ri],parsed.logy,parsed.gauss[0],parsed.psa)
+        plot_data[dataname]=series_wrapper(rx[ri],ry[ri],parsed.logy,
+          parsed.gauss[0],parsed.asd,parsed.asd_method[0],
+          parsed.asd_window_name[0],parsed.asd_window_width[0])
 
       if parsed.diff and ri==1:
         #set datame
@@ -422,9 +446,11 @@ if __name__ == '__main__':
         if parsed.debug:
           print(f"clr[{dataname}]={clr[dataname]}")
         #save data
-        plot_data[dataname]=series_wrapper(xc,res,parsed.logy,parsed.gauss[0],parsed.psa)
+        plot_data[dataname]=series_wrapper(xc,res,parsed.logy,
+          parsed.gauss[0],parsed.asd,parsed.asd_method[0],
+          parsed.asd_window_name[0],parsed.asd_window_width[0])
         # plot_wrapper(xc,res,'diff',
-        #   parsed.logy,parsed.gauss[0],parsed.psa,
+        #   parsed.logy,parsed.gauss[0],parsed.asd,
         #   "C"+str(ci),parsed.x_date_format!="none")
         if parsed.debug:
           print(f"rx[ diff ]={ xc[0:3]}...{ xc[-3:]}")

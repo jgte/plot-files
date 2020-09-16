@@ -3,7 +3,31 @@
 DIR=$(cd $(dirname $BASH_SOURCE);pwd)
 DAT=$DIR/test.dat
 
+#----------------------------
+# --asd test
+#----------------------------
+for i in periodogram welch lombscargle
+do
+$(dirname $DIR)/plot-files.py \
+  --files $DAT \
+  --labels "\-,-,t,-,x,y,z,-" \
+  --title "Calibrated acc GRACE-A 2008-08-01 arc-01" \
+  --y-label "[m/s^2]" \
+  --grid \
+  --debug \
+  --timing \
+  --asd \
+  --asd-method $i \
+  --logy \
+  --logx \
+  $@
+done
+
+exit
+
+#----------------------------
 # std test
+#----------------------------
 # NOTICE: the std values below were derived with:
 # file-stats.awk test.dat | grep std: | awk '{print $6,$7,$8}'
 STDx=5.29369e-09
@@ -29,21 +53,9 @@ $(dirname $DIR)/plot-files.py "${ARGS[@]}" \
   --timing \
   --out ${OUT%.png}.std.png
 
-# --psa test
-$(dirname $DIR)/plot-files.py \
-  --files $DAT \
-  --labels "\-,-,t,-,x,y,z,-" \
-  --title "Calibrated acc GRACE-A 2008-08-01 arc-01" \
-  --y-label "[m/s^2]" \
-  --grid \
-  --debug \
-  --timing \
-  --psa \
-  --logy \
-  --logx \
-  $@
-
+#----------------------------
 # --diff test
+#----------------------------
 $(dirname $DIR)/plot-files.py \
   --files $DAT \
   --labels "\-,-,t,-,x,y,z,-" \
@@ -56,8 +68,9 @@ $(dirname $DIR)/plot-files.py \
   --diff \
   $@
 
-
+#----------------------------
 # --html test
+#----------------------------
 $(dirname $DIR)/plot-files.py \
   --files $DAT \
   --labels "\-,-,t,-,x,y,z,-" \
