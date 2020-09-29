@@ -67,8 +67,6 @@ def xstep(x,max_iter=10):
 
 #converts x,y data into a pandas series
 def series_wrapper(x,y,isabs,smooth_w,isasd,asd_method,asd_window_name,asd_window_width):
-  if isabs:
-    y=np.abs(y)
   if smooth_w>0:
     dx=xstep(x)
     w=gauss_window(smooth_w,dx)
@@ -88,6 +86,8 @@ def series_wrapper(x,y,isabs,smooth_w,isasd,asd_method,asd_window_name,asd_windo
       y = signal.lombscargle(x,y,f)
       x = f*2*np.pi
     y=np.sqrt(y)
+  elif isabs:
+    y=np.abs(y)
   return pd.Series(y,index=x)
 
 #computes the mean of y, subtracts it from y, appends it as string to dataname
