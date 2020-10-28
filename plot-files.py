@@ -289,6 +289,7 @@ if __name__ == '__main__':
     print(f"height     : {parsed.height[0]}")
     print(f"width      : {parsed.width[0]}")
     print(f"logy       : {parsed.logy}")
+    print(f"logx       : {parsed.logx}")
     print(f"title      : {parsed.title}")
     print(f"gauss      : {parsed.gauss}")
     print(f"asd        : {parsed.asd}")
@@ -479,6 +480,8 @@ if __name__ == '__main__':
           pdat.update({dataname: plot_data[dataname]})
       fig=px.line(
         pd.DataFrame(pdat),
+        log_x=parsed.logx,
+        log_y=parsed.logy,
       )
       fig.update_layout(
         title={'text': parsed.title[0], 'x': 0.5, 'xanchor': 'center'},
