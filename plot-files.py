@@ -387,8 +387,11 @@ if __name__ == '__main__':
         print(f"x={x[0:3]}...{x[-3:]}")
         print(f"y={y[0:3]}...{y[-3:]}")
       if not di in stdcols:
-        #compute mean if requested (branching inside this function)
-        y,dataname,mean=handle_mean(y,dataname,mean,demean)
+        if parsed.logy:
+          print("WARNING: --demean and --logy are incompatible, ignoring --demean")
+        else:
+          #compute mean if requested (branching inside this function)
+          y,dataname,mean=handle_mean(y,dataname,mean,demean)
       #save data
       rx.append(x)
       ry.append(y)
