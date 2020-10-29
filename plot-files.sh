@@ -115,7 +115,7 @@ do
     shift; LEN=$(( $1-START+1))
   ;;
   --len) #plot only this number of lines
-    LEN="$1"
+    shift; LEN="$1"
   ;;
   --point-size) #marker size, defaults to 0.5
     shift; POINTSIZE="$1"
@@ -238,18 +238,25 @@ middle() { sed -n ''$1',+'$2'p' $3; }
 
 if [ ! -z "$START" ] || [ ! -z "$LEN" ]
 then
+  echo "Slicing files from $START with length $LEN:"
   [ -z "$START" ] && START=1
   for ((f=0;f<${#FILE_LIST[@]};f++))
   do
-    $DEBUG && echo "---- ${FILE_LIST[f]}"
+    $DEBUG && echo ${FILE_LIST[f]}
     FILE_LEN=$(cat ${FILE_LIST[f]} | wc -l)
-    $DEBUG && echo "wc1 : $FILE_LEN"
-    LEN=$(( FILE_LEN - START +1 ))
-    $DEBUG && echo "len : $FILE_LEN"
+    $DEBUG && echo "file      length : $FILE_LEN"
+    if [ -z "$LEN" ]
+    then
+      LEN_NOW=$(( FILE_LEN - START +1 ))
+      $DEBUG && echo "computed  length : $LEN_NOW"
+    else
+      LEN_NOW=$LEN
+      $DEBUG && echo "requested length : $LEN_NOW"
+    fi
     #get section from original file and put it in temp file
     TMPFILE=/tmp/$(basename $BASH_SOURCE).$RANDOM.$RANDOM
     middle $START $LEN ${FILE_LIST[f]} > $TMPFILE
-    $DEBUG && echo "wc1 : $(cat $TMPFILE | wc -l)"
+    $DEBUG && echo "actual    length : $(cat $TMPFILE | wc -l)"
     FILE_LIST[f]=$TMPFILE
   done
 fi
@@ -277,34 +284,41 @@ then
  exit
 fi
 
-if ! $QUIET
-then
-  echo "Plotting the following ${#FILE_LIST[@]} files:"
-  printf '%s\n' "${FILE_LIST[@]}"
-  echo "labels      : ${LABELS[@]} (${#LABELS[@]} entries)"
-  echo "display     : $DISPLAY_FLAG"
-  echo "interactive : $INTERACTIVE"
-  echo "title       : $TITLE"
-  echo "out         : $OUT"
-  echo "out dir     : $OUTDIR"
-  echo "extension   : $EXT"
-  echo "file labels : ${FILE_LABELS[@]:-} (${#FILE_LABELS[@]} entries)"
-  echo "xticks      : $XTICKS"
-  echo "date-format : $XDATA_FORMAT"
-  echo "date-plot   : $PLOT_DATE_FORMAT"
-  echo "logy        : $LOGY"
-  echo "logx        : $LOGX"
-  echo "font        : $FONT"
-  echo "xlabel      : $XLABEL"
-  echo "ylabel      : $YLABEL"
-  echo "demean      : $DEMEAN"
-  echo "terminal    : $TERMINAL"
-  echo "size        : $SIZE"
-  echo "yrange      : $YRANGE"
-  echo "xrange      : $XRANGE"
-  echo "set-key     : $SET_KEY"
-  echo "plot-style  : $PLOT_STYLE"
-fi
+$QUIET \
+  || echo "\
+Plotting the following ${#FILE_LIST[@]} files:
+$(printf '%s\n' "${FILE_LIST[@]}")
+file labels : ${FILE_LABELS[@]:-} (${#FILE_LABELS[@]} entries)
+labels      : ${LABELS[@]} (${#LABELS[@]} entries)
+out         : $OUT
+out dir     : $OUTDIR
+display     : $DISPLAY_FLAG
+interactive : $INTERACTIVE
+debug       : $DEBUG
+force       : $FORCE
+title       : $TITLE
+xticks      : $XTICKS
+x-date-data : $XDATA_FORMAT
+x-date-format : $PLOT_DATE_FORMAT
+logy        : $LOGY
+logx        : $LOGX
+start-x     : $START
+len         : $LEN
+point-size  : $POINTSIZE
+dyn-point-size : $DYNPS
+max-point-size : $MAX_POINTSIZE
+font        : $FONT
+xlabel      : $XLABEL
+ylabel      : $YLABEL
+demean      : $DEMEAN
+terminal    : $TERMINAL
+size        : $SIZE
+yrange      : $YRANGE
+xrange      : $XRANGE
+set-key     : $SET_KEY
+plot-style  : $PLOT_STYLE
+point-style : $POINT_STYLE
+shoreline   : $SHORELINE"
 
 #determine xdata column
 XDATA=
