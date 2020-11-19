@@ -275,6 +275,12 @@ if __name__ == '__main__':
   else:
     y_label=''
 
+  #patch empty title
+  if len(parsed.title)==0:
+    title=''
+  else:
+    title=parsed.title[0]
+
   #inform
   if parsed.debug:
     print("files:     :")
@@ -471,7 +477,7 @@ if __name__ == '__main__':
       # Create new document with default CSS style
       document = HTMLDocument()
       # Set document title
-      document.set_title(parsed.title[0])
+      document.set_title(title)
       # gather plot data
       pdat={}
       for dataname in plot_data.keys():
@@ -487,7 +493,7 @@ if __name__ == '__main__':
         log_y=parsed.logy,
       )
       fig.update_layout(
-        title={'text': parsed.title[0], 'x': 0.5, 'xanchor': 'center'},
+        title={'text': title, 'x': 0.5, 'xanchor': 'center'},
         xaxis={'title': x_label},
         yaxis={'title': y_label},
         height=parsed.height[0]*96,
@@ -526,7 +532,7 @@ if __name__ == '__main__':
       if x_label:        plt.xlabel(x_label)
       if parsed.logx:    plt.xscale('log')
       if parsed.logy:    plt.yscale('log')
-      if len(parsed.title)>0: plt.title(parsed.title[0])
+      plt.title(title)
       plt.legend()
       if plotfilename=='interactive':
         plt.show()
