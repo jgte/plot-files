@@ -111,7 +111,7 @@ do
   --start-x|-s) #plot only from this line onwards
     shift; START="$1"
   ;;
-  --end-x|-e) #plot only unit this line; this argument must come after --start-x
+  --end-x|-e) #plot only until this line; this argument must come after --start-x
     shift; LEN=$(( $1-START+1))
   ;;
   --len) #plot only this number of lines

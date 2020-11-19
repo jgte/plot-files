@@ -80,7 +80,7 @@ def series_wrapper(x,y,isabs,smooth_w,isasd,asd_method,asd_window_name,asd_windo
     if asd_method=='periodogram':
       x,y = signal.periodogram(y,dx,asd_window_name,detrend='linear',scaling='density',return_onesided=True)
     if asd_method=='welch':
-      x,y = signal.welch(      y,dx,asd_window_name,nperseg=int(asd_window_width*len(x)),detrend='linear',scaling='density',return_onesided=True)
+      x,y = signal.welch(      y,dx,asd_window_name,detrend='linear',scaling='density',return_onesided=True,nperseg=int(asd_window_width*len(x)))
     if asd_method=='lombscargle':
       f = np.logspace(math.log10(1/2/(x[-1]-x[1])/2/np.pi),math.log10(1/2/dx/2/np.pi),len(x))
       y = signal.lombscargle(x,y,f)
