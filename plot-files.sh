@@ -255,7 +255,7 @@ then
     fi
     #get section from original file and put it in temp file
     TMPFILE=/tmp/$(basename $BASH_SOURCE).$RANDOM.$RANDOM
-    middle $START $LEN ${FILE_LIST[f]} > $TMPFILE
+    middle $START $LEN_NOW ${FILE_LIST[f]} > $TMPFILE
     $DEBUG && echo "actual    length : $(cat $TMPFILE | wc -l)"
     FILE_LIST[f]=$TMPFILE
   done
@@ -481,17 +481,18 @@ do
         then
           #compute the mean
           OFFSET=$(awk '{total+=$'$COL'} END {printf "%g",total/NR}' ${FILE_LIST[f]})
-          #append it to title
-          LEGEND+=" $OFFSET"
+        else
+          OFFSET=0
         fi
-        PLOT_ARGS+=("'${FILE_LIST[f]}' using $LON:$LAT:(\$$COL - $OFFSET) title '$LEGEND' with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $POINTSIZE lc palette")
+        PLOT_ARGS+=("'${FILE_LIST[f]}' using $LON:$LAT:(\$$COL - $OFFSET) with $PLOT_STYLE pointtype $((f+$POINT_STYLE)) pointsize $POINTSIZE lc palette")
       done
     else
       #reset file-wise color if there's only one data column
       [ $NR_COL -eq 1 ] && c=1 || c=$((c+1))
-      for ((f=0;f<${#FILE_LIST[@]};f++))
+      N=${#FILE_LIST[@]}
+      for ((f=0;f<$N;f++))
       do
-        $DYNPS && PS=$(echo "scale=1;($N-$i)/$N*($MAX_POINTSIZE-$POINTSIZE)+$POINTSIZE"|bc) || PS=$POINTSIZE
+        $DYNPS && PS=$(echo "scale=1;($N-$f)/$N*($MAX_POINTSIZE-$POINTSIZE)+$POINTSIZE"|bc) || PS=$POINTSIZE
         OFFSET=0
         LEGEND="$i ${FILE_LABELS[f]}"
         if $DEMEAN
