@@ -296,7 +296,7 @@ if __name__ == '__main__':
     print(f"width      : {parsed.width[0]}")
     print(f"logy       : {parsed.logy}")
     print(f"logx       : {parsed.logx}")
-    print(f"title      : {parsed.title}")
+    print(f"title      : {title}")
     print(f"gauss      : {parsed.gauss}")
     print(f"asd        : {parsed.asd}")
     print(f"asd method : {parsed.asd_method[0]}")
@@ -393,7 +393,7 @@ if __name__ == '__main__':
         print(f"x={x[0:3]}...{x[-3:]}")
         print(f"y={y[0:3]}...{y[-3:]}")
       if not di in stdcols:
-        if parsed.logy:
+        if parsed.logy and demean:
           print("WARNING: --demean and --logy are incompatible, ignoring --demean")
         else:
           #compute mean if requested (branching inside this function)
