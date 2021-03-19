@@ -8,6 +8,7 @@ import argparse
 import math
 
 for d in [\
+  os.path.expanduser(os.path.join('~','utils','time')),\
   os.path.expanduser(os.path.join('~','utils','plot-l1b')),\
   os.path.expanduser(os.path.join('~','cloud','common','utils','plot-l1b'))\
   ]:
@@ -88,7 +89,10 @@ def series_wrapper(x,y,isabs,smooth_w,isasd,asd_method,asd_window_name,asd_windo
     y=np.sqrt(y)
   elif isabs:
     y=np.abs(y)
-  return pd.Series(y,index=x)
+  out=pd.Series(y,index=x)
+  if not out.index.is_unique:
+    out=out[~out.index.duplicated(keep='first')]
+  return out
 
 #computes the mean of y, subtracts it from y, appends it as string to dataname
 def handle_mean(y,dataname,mean,demean):
@@ -483,10 +487,13 @@ if __name__ == '__main__':
       for dataname in plot_data.keys():
         show_timing(f"start plotting {dataname}")
         if dataname[-4:]=="_std":
-          print("unfinished")
+          print("WARNING: unfinished '_std' datanames")
         else:
           # aggregate data into a data frame
           pdat.update({dataname: plot_data[dataname]})
+      if parsed.debug:
+        print("pdat=")
+        print(pdat)
       fig=px.line(
         pd.DataFrame(pdat),
         log_x=parsed.logx,
