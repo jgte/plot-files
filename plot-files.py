@@ -8,7 +8,9 @@ import argparse
 import math
 
 for d in [\
+  os.path.expanduser(os.path.join('/home1','00767','byaa676','utils','time')),\
   os.path.expanduser(os.path.join('~','utils','time')),\
+  os.path.expanduser(os.path.join('/home1','00767','byaa676','utils','plot-l1b')),\
   os.path.expanduser(os.path.join('~','utils','plot-l1b')),\
   os.path.expanduser(os.path.join('~','cloud','common','utils','plot-l1b'))\
   ]:

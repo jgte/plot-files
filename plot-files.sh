@@ -480,7 +480,7 @@ do
         if $DEMEAN
         then
           #compute the mean
-          OFFSET=$(awk '{total+=$'$COL'} END {printf "%g",total/NR}' ${FILE_LIST[f]})
+          OFFSET=$(awk '{total+=$'$COL'} END {printf "%23.16e",total/NR}' ${FILE_LIST[f]})
         else
           OFFSET=0
         fi
