@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 
 import os
-import time
 import sys
-import collections
-import argparse
-import math
 
 for d in [\
-  os.path.expanduser(os.path.join('/home1','00767','byaa676','utils','time')),\
   os.path.expanduser(os.path.join('~','utils','time')),\
-  os.path.expanduser(os.path.join('/home1','00767','byaa676','utils','plot-l1b')),\
   os.path.expanduser(os.path.join('~','utils','plot-l1b')),\
-  os.path.expanduser(os.path.join('~','cloud','common','utils','plot-l1b'))\
   ]:
   if os.path.isdir(d):
     sys.path.insert(1,d)
-import time_conversion as tc
+  d=d.replace("~",os.environ['HOME'])
+  if os.path.isdir(d):
+    sys.path.insert(1,d)
 
+import time
+import collections
+import argparse
+import math
+import time_conversion as tc
 import numpy as np
 import matplotlib as mpl
+import faulthandler; faulthandler.enable()
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-# import faulthandler; faulthandler.enable()
 from operator import sub
 from scipy.interpolate import interp1d
 from scipy import signal
