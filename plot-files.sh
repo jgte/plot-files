@@ -267,7 +267,7 @@ EXT=$(extension $TERMINAL)
 if [ -z "$OUT" ]
 then
   #if no -out= was given, make up something
-  OUT=${FILE_LIST[0]}
+  OUT=${FILE_LIST[0]}.$EXT
 else
   #out was given, add extension (if needed)
   OUT=${OUT%\.$EXT}.$EXT
