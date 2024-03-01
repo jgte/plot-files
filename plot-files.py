@@ -113,14 +113,14 @@ if __name__ == '__main__':
   # argument parsing
   parser = argparse.ArgumentParser(\
     epilog="")
-  parser.add_argument('-f','--files', nargs='+', type=str, required=True,
+  parser.add_argument('-f','--files', action='append', type=str, required=True,
     help='files to plot')
   parser.add_argument('-b','--labels', nargs=1, type=str, required=True,
     help='columns to plot from FILES : '\
     '"t" means abcissae, "-" ignores that column (use "\-" if the first column is to be ignored), '\
     '"std" plots the confidence interval over the previous timeseries '\
     'and anything else is used to label the plot legend')
-  parser.add_argument('-F','--filelabels', nargs='+', type=str, required=False, default='',\
+  parser.add_argument('-F','--filelabels', action='append', type=str, required=False, default='',\
     help='labels the FILES in the legend entries, defaults to the basename of FILES')
   parser.add_argument('-S','--start', nargs=1, type=int, required=False, default=[0], \
     help='plot only from this line onwards (not yet implemented)')
