@@ -113,7 +113,7 @@ if __name__ == '__main__':
   # argument parsing
   parser = argparse.ArgumentParser(\
     epilog="")
-  parser.add_argument('-f','--files', nargs='+', type=str, required=True,
+  parser.add_argument('-f','--files', action='append', type=str, required=True,
     help='files to plot')
   parser.add_argument('-b','--labels', nargs=1, type=str, required=True,
     help='columns to plot from FILES : '\
